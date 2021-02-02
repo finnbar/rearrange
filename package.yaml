@@ -27,6 +27,11 @@ dependencies:
 
 library:
   source-dirs: src
+  default-extensions:
+  - TypeFamilies
+  - DataKinds
+  - PolyKinds
+  - ConstraintKinds
 
 executables:
   rearrange-exe:
