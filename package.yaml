@@ -21,6 +21,9 @@ description:         Please see the README on GitHub at <https://github.com/finn
 
 dependencies:
 - base >= 4.7 && < 5
+- type-level-sets
+- effect-monad
+- first-class-families
 
 library:
   source-dirs: src
