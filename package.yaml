@@ -32,6 +32,8 @@ library:
   - DataKinds
   - PolyKinds
   - ConstraintKinds
+  - GADTs
+  - TypeApplications
 
 executables:
   rearrange-exe:
