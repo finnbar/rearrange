@@ -1,4 +1,4 @@
-{-# LANGUAGE RebindableSyntax, ForeignFunctionInterface #-}
+{-# LANGUAGE RebindableSyntax, ForeignFunctionInterface, TypeApplications, DataKinds #-}
 
 module Main where
 
@@ -27,8 +27,9 @@ runSystem = do
     output <- Wrap outputCell
     let out = Addr @"out" output
     let env = Ext inp $ Ext out Empty
-    -- TODO: function that converts all elements of Env into all elements with :! R, :! W.
+    Wrap cMain
     Wrap $ runMemory example env
+    Wrap cMain
 
 example = do
     input <- readCell @"in"
