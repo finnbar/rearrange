@@ -36,6 +36,7 @@ library:
   - GADTs
   - TypeApplications
   - TypeOperators
+  - MultiParamTypeClasses
 
 executables:
   rearrange-exe:

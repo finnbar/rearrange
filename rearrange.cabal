@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: a64179c4876d4a9b7c94be3b27cf7f8285a86be0f1376ec4c7e87b0b1b556b9c
+-- hash: e49f8eb21b0fb774c7238cca9a14211b2ec624cb790e5d4cc2bf7af6d8c9b20d
 
 name:           rearrange
 version:        0.1.0.0
@@ -29,12 +29,14 @@ library
   exposed-modules:
       Data.Memory
       Data.MemoryAddr
+      Data.Type.HList
+      Data.Type.Utils
       Rearrange
   other-modules:
       Paths_rearrange
   hs-source-dirs:
       src
-  default-extensions: TypeFamilies DataKinds PolyKinds ConstraintKinds GADTs TypeApplications TypeOperators
+  default-extensions: TypeFamilies DataKinds PolyKinds ConstraintKinds GADTs TypeApplications TypeOperators MultiParamTypeClasses
   c-sources:
       csrc/main.c
   build-depends:
