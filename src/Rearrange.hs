@@ -1,8 +1,8 @@
 module Rearrange (
     readCell, writeCell,
     Memory(..), MAddr(..),
-    Effect(..), (:!)(..), Eff(..)) where
+    Effect(..)) where
 
-import Data.Memory (readCell, writeCell, Memory(..), MAddr(..))
+import Data.Memory (Memory(..))
+import Data.MemoryAddr (readCell, writeCell, MAddr(..))
 import Control.Effect (Effect(..))
-import Control.Effect.State ((:!)(..), Eff(..))
