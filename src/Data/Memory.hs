@@ -2,7 +2,7 @@
 
 module Data.Memory where
 
-import Prelude hiding (Monad(..), reads)
+import Prelude hiding (Monad(..))
 import qualified Prelude as P
 import GHC.TypeLits (Symbol, CmpSymbol)
 import Control.Effect
@@ -10,7 +10,6 @@ import Control.Effect.State ((:!)(..), Eff(..))
 import Data.Type.Set
 import Foreign.Storable
 import Foreign.Ptr
-import Foreign.C.Types
 
 -- A graded monad for tracking reads and writes.
 -- For this version, we pretend that updates do not exist, and explicitly disallow them.
@@ -46,13 +45,8 @@ instance Effect Memory where
         Mem $ \fg -> let (f, g) = split fg
                       in e f P.>>= ((\fn -> fn g) . runMemory . k)
 
-reads :: forall s t. Storable t => Memory '[MAddr s t :! R] t
-reads = Mem $ \(Ext (Addr pt :! _) Empty) -> peek pt
+readCell :: forall s t. Storable t => Memory '[MAddr s t :! R] t
+readCell = Mem $ \(Ext (Addr pt :! _) Empty) -> peek pt
 
-writes :: forall s t. Storable t => t -> Memory '[MAddr s t :! W] ()
-writes x = Mem $ \(Ext (Addr pt :! _) Empty) -> poke pt x
-
-fn = do
-    input <- reads @"in"
-    let output = input + 2 :: CInt
-    writes @"out" output
+writeCell :: forall s t. Storable t => t -> Memory '[MAddr s t :! W] ()
+writeCell x = Mem $ \(Ext (Addr pt :! _) Empty) -> poke pt x
