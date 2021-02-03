@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: e49f8eb21b0fb774c7238cca9a14211b2ec624cb790e5d4cc2bf7af6d8c9b20d
+-- hash: 06f0e4e0cad6d83b4338d0dae6aa46d5460e524e9d6cad41be03f42896b8a431
 
 name:           rearrange
 version:        0.1.0.0
@@ -32,6 +32,7 @@ library
       Data.Type.HList
       Data.Type.Utils
       Rearrange
+      ToAddrs
   other-modules:
       Paths_rearrange
   hs-source-dirs:
@@ -49,6 +50,7 @@ library
 executable rearrange-exe
   main-is: Main.hs
   other-modules:
+      Functions
       Paths_rearrange
   hs-source-dirs:
       app

@@ -16,7 +16,10 @@ int* intermediateCell() {
     return &intermediate;
 }
 
-int cmain() {
-    printf("in: %d, inter: %d, out: %d\n", input, intermediate, output);
+void cinput() {
     int x = scanf("%d", &input);
+}
+
+void coutput() {
+    printf("in: %d, inter: %d, out: %d\n", input, intermediate, output);
 }
