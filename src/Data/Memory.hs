@@ -18,6 +18,7 @@ import Foreign.Ptr
 data MAddr (s :: Symbol) t where
     Addr :: forall s t. Storable t => Ptr t -> MAddr s t
 
+-- Can this be done as some kind of Union? So (Set (Union s t)) -> IO a for reads s, writes t.
 newtype Memory (s :: [*]) a = Mem { runMemory :: Set s -> IO a }
 
 type instance Cmp (MAddr s t :! e) (MAddr s' t' :! e') = CmpSymbol s s'

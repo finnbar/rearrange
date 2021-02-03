@@ -27,6 +27,7 @@ dependencies:
 
 library:
   source-dirs: src
+  c-sources: csrc/main.c
   default-extensions:
   - TypeFamilies
   - DataKinds
@@ -34,6 +35,7 @@ library:
   - ConstraintKinds
   - GADTs
   - TypeApplications
+  - TypeOperators
 
 executables:
   rearrange-exe:
