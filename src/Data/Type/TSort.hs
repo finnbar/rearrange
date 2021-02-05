@@ -16,34 +16,32 @@ type Acc = ([*], [*], [*])
 type Comp = * -> * -> Exp Bool
 
 type family TopsortMem (comp :: Comp) (mems :: [*]) :: [*] where
-    TopsortMem c mems = Eval (GetStack =<< Foldr (CheckUnused c) '( '[], '[], mems ) mems)
+    TopsortMem c mems = Eval (GetStack =<< Foldr (ExpandUnused c) '( '[], '[], mems ) mems)
 
 data GetStack :: Acc -> Exp [*]
 type instance Eval (GetStack '(used, stack, list)) = stack
 
--- TODO: Rewrite with UnBool
-
-data CheckUnused :: Comp -> * -> Acc -> Exp Acc
-type instance Eval (CheckUnused c el '(used, stack, list)) =
-    Eval (ExpandUnused c el '(used, stack, list) (Contains el used))
-
-data ExpandUnused :: Comp -> * -> Acc -> Bool -> Exp Acc
-type instance Eval (ExpandUnused _ _ acc 'True) = acc
-type instance Eval (ExpandUnused c el acc 'False) = Eval (DFS c el acc)
+data ExpandUnused :: Comp -> * -> Acc -> Exp Acc
+type instance Eval (ExpandUnused c el '(used, stack, list)) =
+    Eval (UnBool
+          (DFS c el '(used, stack, list)) -- False
+          (Pure '(used, stack, list))     -- True
+          (Contains el used)              -- Condition
+    )
 
 data DFS :: Comp -> * -> Acc -> Exp Acc
 type instance Eval (DFS c el '(used, stack, list)) =
     Eval (UpdateStack el =<< Foldr (CheckDFS c el) '(el ': used, stack, list) list)
 
 data UpdateStack :: * -> Acc -> Exp Acc
-type instance Eval (UpdateStack el '(used, stack, list)) = Eval (Pure '(used, el ': stack, list))
+type instance Eval (UpdateStack el '(used, stack, list)) = '(used, el ': stack, list)
 
 data CheckDFS :: Comp -> * -> * -> Acc -> Exp Acc
 type instance Eval (CheckDFS compare el el' '(used, stack, list)) =
-    -- NOTE: UnBool :: (false :: k) -> (true :: k) -> Bool -> Exp k
     Eval (UnBool
-          (Pure '(used, stack, list))
-          (DFS compare el' '(used, stack, list))
+          (Pure '(used, stack, list))            -- False
+          (DFS compare el' '(used, stack, list)) -- True
+          -- Condition
           (Eval (Eval (compare el el') && Eval (Not (Contains el' used))))
         )
 
