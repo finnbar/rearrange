@@ -4,10 +4,6 @@ module Data.Type.Utils where
 
 import Data.Type.Set (MemberP)
 
-type family Not (x :: Bool) :: Bool where
-    Not True = False
-    Not False = True
-
 type family Remove (x :: k) (xs :: [k]) :: [k] where
     Remove x '[] = '[]
     Remove x (x ': xs) = xs

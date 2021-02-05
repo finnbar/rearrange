@@ -1,7 +1,8 @@
 {-# LANGUAGE UndecidableInstances, RebindableSyntax, TypeOperators #-}
 
 module Data.Memory (
-    Memory(..)
+    Memory(..),
+    TupleUnion
 ) where
 
 import Prelude hiding (Monad(..))

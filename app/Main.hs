@@ -17,8 +17,8 @@ foreign import ccall "coutput" cOutput :: IO ()
 
 main :: IO ()
 main = do
-    addrs <- toAddrs (inputCell :+: outputCell :+: HNil)
-    let env = toSet (addrs :: HList '[MAddr "in" CInt, MAddr "out" CInt])
+    addrs <- toAddrs (inputCell :+: intermediateCell :+: outputCell :+: HNil)
+    let env = toSet (addrs :: HList '[MAddr "in" CInt, MAddr "inter" CInt, MAddr "out" CInt])
     cInput
-    runMemory example env
+    runMems (topsort $ example2 :+: example :+: HNil) env
     cOutput
