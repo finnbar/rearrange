@@ -45,6 +45,6 @@ type instance Eval (CheckDFS compare el el' '(used, stack, list)) =
           (Eval (Eval (compare el el') && Eval (Not (Contains el' used))))
         )
 
-topsort :: (RearrangeList xs (TopsortMem IsLessThan xs)) =>
+topsort :: (NoDuplicates xs, RearrangeList xs (TopsortMem IsLessThan xs)) =>
     HList xs -> HList (TopsortMem IsLessThan xs)
 topsort = rearrange
