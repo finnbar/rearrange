@@ -6,6 +6,8 @@ import Data.Type.Set (MemberP)
 import GHC.TypeLits
 import Data.Kind
 
+import Fcf (Exp, Eval)
+
 type family Remove (x :: k) (xs :: [k]) :: [k] where
     Remove x '[] = '[]
     Remove x (x ': xs) = xs
@@ -38,6 +40,18 @@ type family Contains (x :: k) (xs :: [k]) :: Bool where
     Contains x (x ': xs) = True
     Contains x (y ': xs) = Contains x xs
 
+type family Contains2D (x :: k) (xs :: [[k]]) :: Bool where
+    Contains2D x '[] = False
+    Contains2D x (y ': ys) = Or (Contains x y) (Contains2D x ys)
+
+type family Combine (xs :: [*]) (ys :: [*]) :: [*] where
+    Combine '[] ys = ys
+    Combine (x ': xs) ys = x ': Combine xs ys
+
+type family Append (x :: k) (xs :: [k]) :: [k] where
+    Append x '[] = '[x]
+    Append x (y ': ys) = y ': Append x ys
+
 type family HasDuplicates (xs :: [*]) :: Bool where
     HasDuplicates '[] = False
     HasDuplicates (x ': xs) = Or (Contains x xs) (HasDuplicates xs)
@@ -49,3 +63,8 @@ type family NoDuplicatesHelper (xs :: [*]) (c :: Bool) :: Constraint where
     NoDuplicatesHelper xs 'False = ()
     NoDuplicatesHelper xs 'True  =
         TypeError (Text "The list " :<>: ShowType xs :<>: Text " should not contain duplicates!")
+
+data Foldl :: (b -> a -> Exp b) -> b -> t a -> Exp b
+type instance Eval (Foldl f acc '[]) = acc
+type instance Eval (Foldl f acc (x ': xs)) =
+    Eval (Foldl f (Eval (f acc x)) xs)

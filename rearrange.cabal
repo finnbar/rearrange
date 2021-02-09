@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 9bdef4f99e5668fdcc9ee8795f38ecad988767bc1a3ed495132a48b8d5c32d09
+-- hash: dd2535013776a8eee0f8741557ff9a824e15799c4f1fd972ea949d9abfd36197
 
 name:           rearrange
 version:        0.1.0.0
@@ -35,6 +35,7 @@ library
       Data.Type.TSort
       Data.Type.Utils
       Rearrange
+      Testing
       ToAddrs
   other-modules:
       Paths_rearrange
