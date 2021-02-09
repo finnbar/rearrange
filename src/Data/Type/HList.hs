@@ -2,10 +2,11 @@
 
 module Data.Type.HList (
     HList(..),
+    hCombine,
     RearrangeList(..)
     ) where
 
-import Data.Type.Utils (Remove)
+import Data.Type.Utils (Remove, Combine)
 
 -- The HList structure.
 
@@ -14,6 +15,10 @@ data HList :: [*] -> * where
     (:+:) :: x -> HList xs -> HList (x ': xs)
 
 infixr 5 :+:
+
+hCombine :: HList xs -> HList ys -> HList (Combine xs ys)
+hCombine HNil ys = ys
+hCombine (x :+: xs) ys = x :+: hCombine xs ys
 
 -- RetrieveType, which finds an element of the type and returns the list
 -- without that type.
