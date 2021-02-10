@@ -5,6 +5,7 @@ import Data.MemoryAddr
 import Data.Memory
 import Data.Type.HList
 import Data.Type.Dependencies
+import Data.Type.AdjacencyList
 
 type MA = MAddr "inp" Int
 type MB = MAddr "int" Int

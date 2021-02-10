@@ -69,7 +69,7 @@ data UpdateSCCs :: Acc' -> Acc -> Exp Acc'
 type instance Eval (UpdateSCCs '(sccs, used) '(scc, used')) =
     If (Eval (Null scc))
        '(sccs, used)
-       '(scc ': sccs, used')
+       '(Append scc sccs, used')
 
 -- Assign adds node to the SCC if not used, then Assigns all in-edges.
 data Assign :: AdjacencyList -> * -> Acc -> Exp Acc
@@ -77,8 +77,7 @@ type instance Eval (Assign adj node '(scc, used)) =
     Eval (UnBool
             (Foldr (Assign adj) '(node ': scc, node ': used) =<< GetInEdges adj node)
             (Pure '(scc, used))
-            (Contains node used)
-    )
+            (Contains node used))
 
 -- Bonus step: since we want no loops, we check that every SCC has size one.
 
