@@ -48,6 +48,7 @@ type family AddProxy (xs :: [*]) :: [*] where
     AddProxy (x ': xs) = Proxy x ': AddProxy xs
 
 class RunPartialMems xs ys env where
+    --runPartialMems :: HList xs -> Set env -> Proxy ys -> IO (HList (...))
     runPartialMems :: HList xs -> Set env -> HList ys -> IO (HList (PartialMemoryReturn xs ys))
 
 instance RunPartialMems '[] ys env where

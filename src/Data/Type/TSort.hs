@@ -77,6 +77,8 @@ type instance Eval (SCC c list) = Eval (GetResult =<< Foldl (AddToSCC c) '( '[],
 data GetResult :: Acc' -> Exp [[*]]
 type instance Eval (GetResult '(result, used, list)) = result
 
+-- Given a node, attempt to assign it to a new SCC if it is not already used.
+-- Then update the list of SCCs with that SCC (UpdateRes).
 data AddToSCC :: Comp -> Acc' -> * -> Exp Acc'
 type instance Eval (AddToSCC c '(result, used, list) el) =
     Eval (UnBool
@@ -88,18 +90,24 @@ data UpdateRes :: [[*]] -> Acc -> Exp Acc'
 type instance Eval (UpdateRes result '(res, used, list)) =
     '(Append res result, used, list)
 
--- Assign(el) returns all Assign(v) for v->el, and el itself.
+-- Assign(el) returns all Assign(el') for el'->el, and el itself in a new SCC.
+-- Add el to result and used, and then check all other nodes via AssignIfUnused.
 data Assign :: Comp -> * -> Acc -> Exp Acc
 type instance Eval (Assign c el '(result, used, list)) =
     Eval (Foldr (AssignIfUnused c el) '(el ': result, el ': used, list) list)
 
+-- Try all nodes el' to check if el'->el, if so Assign.
 data AssignIfUnused :: Comp -> * -> * -> Acc -> Exp Acc
 type instance Eval (AssignIfUnused compare el el' '(res, used, list)) =
     Eval (UnBool
             (Pure '(res, used, list)) -- False
             (Assign compare el' '(res, used, list)) -- True
-            (Eval (Eval (Not (Contains el' used)) && Eval (compare el' el)))
+            (Not (Contains el' used) &&& compare el' el)
     )
+
+infixr 3 &&&
+type family (&&&) (b1 :: Exp Bool) (b2 :: Exp Bool) :: Bool where
+    b1 &&& b2 = Eval (Eval b1 && Eval b2)
 
 type family FlattenSingletons (xss :: [[*]]) :: [*] where
     FlattenSingletons '[] = '[]
