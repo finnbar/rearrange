@@ -13,9 +13,10 @@ import GHC.TypeLits
 -- https://stackoverflow.com/questions/59965812/topological-sort-based-on-a-comparator-rather-than-a-graph
 -- step 3 of https://en.wikipedia.org/wiki/Kosaraju%27s_algorithm
 
--- (stack, used nodes)
-type Acc = ([*], [*])
+type Acc = ([*], [*]) -- (stack, used nodes)
 type EmptyAcc = '( '[], '[])
+type Acc' = ([[*]], [*]) -- (SCCs, used nodes)
+type EmptyAcc' = '( '[], '[])
 
 -- Kosaraju's algorithm is just a topological sort followed by loop finding.
 type family TopsortMem (comp :: Comp) (mems :: [*]) :: [*] where
@@ -49,10 +50,6 @@ type instance Eval (UpdateStack node '(stack, used)) =
     '(node ': stack, used)
 
 -- Step 3: Look for SCC components in topologically sorted list.
-
--- (SCCs, used)
-type Acc' = ([[*]], [*])
-type EmptyAcc' = '( '[], '[])
 
 -- For each node in order (Foldl), add it to an SCC if it's not yet used.
 -- Then retrieve the SCCs from the accumulator.
