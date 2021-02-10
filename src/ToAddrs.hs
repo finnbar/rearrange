@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE FlexibleInstances, RankNTypes, ScopedTypeVariables #-}
 
 module ToAddrs where
 
@@ -7,19 +7,10 @@ import Data.Type.HList
 import Data.Type.Set
 import Foreign.Storable
 import Foreign.Ptr
+import GHC.TypeLits (Symbol)
 
-class ToAddrs ios addrs where
-    toAddrs :: HList ios -> IO (HList addrs)
-
-instance ToAddrs '[] '[] where
-    toAddrs _ = return HNil
-
-instance (Storable t, ToAddrs xs ys) => ToAddrs (IO (Ptr t) ': xs) (MAddr s t ': ys) where
-    toAddrs (action :+: actions) = do
-        ptr <- action
-        let addr = Addr ptr
-        addrs <- toAddrs actions
-        return $ addr :+: addrs
+toAddr :: forall (s :: Symbol) t. Storable t => IO (Ptr t) -> IO (MAddr s t)
+toAddr action = action >>= \ptr -> return (Addr @s ptr)
 
 class ToSet xs where
     toSet :: HList xs -> Set xs
@@ -29,3 +20,19 @@ instance ToSet '[] where
 
 instance ToSet xs => ToSet (x ': xs) where
     toSet (x :+: xs) = Ext x (toSet xs)
+
+type family NoIO (xs :: [*]) :: [*] where
+    NoIO '[] = '[]
+    NoIO (IO x ': xs) = x ': NoIO xs
+
+class Distribute xs where
+    distribute :: HList xs -> IO (HList (NoIO xs))
+
+instance Distribute '[] where
+    distribute _ = return HNil
+
+instance Distribute xs => Distribute (IO x ': xs) where
+    distribute (action :+: actions) = do
+        res <- action
+        ress <- distribute actions
+        return $ res :+: ress
