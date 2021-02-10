@@ -2,117 +2,98 @@
 
 module Data.Type.TSort where
 
-import Data.Type.Utils
-import Data.Type.Dependencies (IsLessThan, PartialOrder)
+import Data.Type.Utils hiding (Fst, If)
+import Data.Type.AdjacencyList
+import Data.Type.Dependencies (IsLessThan)
 import Data.Type.HList
 
 import Fcf
 import GHC.TypeLits
 
--- Consideration for future: maybe build an adjacency list?
--- Problem is that SCC requires a reverse adjacency list.
-
 -- https://stackoverflow.com/questions/59965812/topological-sort-based-on-a-comparator-rather-than-a-graph
 -- step 3 of https://en.wikipedia.org/wiki/Kosaraju%27s_algorithm
 
-type Acc = ([*], [*], [*]) -- used, stack, list of nodes
-type Comp = * -> * -> Exp Bool
+-- (stack, used nodes)
+type Acc = ([*], [*])
+type EmptyAcc = '( '[], '[])
 
 -- Kosaraju's algorithm is just a topological sort followed by loop finding.
 type family TopsortMem (comp :: Comp) (mems :: [*]) :: [*] where
-    TopsortMem c mems = Eval (DoSCC c =<< DoTopsort c mems)
+    TopsortMem c mems =
+        Eval (RunTopsortMem =<< ToAdjacencyList c mems)
 
--- Steps 1 and 2 of Kosaraju's algorithm: build a topological order.
+data RunTopsortMem :: AdjacencyList -> Exp [*]
+type instance Eval (RunTopsortMem adj) =
+    Eval (FlattenSingletons =<< DoSCC adj =<< DoTopsort adj)
 
--- For each node in our graph, attempt to expand it if it's unused.
--- Then get the stack (resulting topsort) from that.
-data DoTopsort :: Comp -> [*] -> Exp [*]
-type instance Eval (DoTopsort c mems) = Eval (GetStack =<< Foldr (ExpandUnused c) '( '[], '[], mems ) mems)
+-- Steps 1 and 2: do a topological sort.
 
-data GetStack :: Acc -> Exp [*]
-type instance Eval (GetStack '(stack, used, list)) = stack
+-- Loop through the nodes, doing a DFS on all unused.
+data DoTopsort :: AdjacencyList -> Exp [*]
+type instance Eval (DoTopsort adj) =
+    Eval (Fst =<< Foldr (ExpandUnused adj) EmptyAcc (Eval (Keys adj)))
 
--- If a node is unused, DFS through it to get a local topsort.
-data ExpandUnused :: Comp -> * -> Acc -> Exp Acc
-type instance Eval (ExpandUnused c el '(stack, used, list)) =
+-- Check whether a node is used yet - if not, run DFS.
+data ExpandUnused :: AdjacencyList -> * -> Acc -> Exp Acc
+type instance Eval (ExpandUnused adj node '(stack, used)) =
     Eval (UnBool
-          (DFS c el '(stack, used, list)) -- False
-          (Pure '(stack, used, list))     -- True
-          (Contains el used)              -- Condition
+            (UpdateStack node =<< DFS adj node '(stack, used))
+            (Pure '(stack, used))
+            (Contains node used)
     )
 
--- For each node, check if you can recursively DFS from it.
--- Also mark this node as used before the process (so we don't infinite loop),
--- and add this node to the stack afterwards.
-data DFS :: Comp -> * -> Acc -> Exp Acc
-type instance Eval (DFS c el '(stack, used, list)) =
-    Eval (UpdateStack el =<< Foldr (CheckDFS c el) '(stack, el ': used, list) list)
-
+-- Once an expansion is done, add the node to the stack.
 data UpdateStack :: * -> Acc -> Exp Acc
-type instance Eval (UpdateStack el '(stack, used, list)) = '(el ': stack, used, list)
+type instance Eval (UpdateStack node '(stack, used)) =
+    '(node ': stack, used)
 
--- DFS from el to el' iff el->el' exists and el' hasn't been used yet.
-data CheckDFS :: Comp -> * -> * -> Acc -> Exp Acc
-type instance Eval (CheckDFS compare el el' '(stack, used, list)) =
+-- DFS by attempting to expand each out edge of the given node.
+data DFS :: AdjacencyList -> * -> Acc -> Exp Acc
+type instance Eval (DFS adj node '(stack, used)) =
+    Eval (Foldr (ExpandUnused adj) '(stack, node ': used) =<< GetOutEdges adj node)
+
+-- Step 3: Look for SCC components in topologically sorted list.
+
+-- (SCCs, used)
+type Acc' = ([[*]], [*])
+type EmptyAcc' = '( '[], '[])
+
+-- For each node in order (Foldl), add it to an SCC if it's not yet used.
+-- Then retrieve the SCCs from the accumulator.
+data DoSCC :: AdjacencyList -> [*] -> Exp [[*]]
+type instance Eval (DoSCC adj topsorted) =
+    Eval (Fst =<< Foldl (AddToSCC adj) EmptyAcc' topsorted)
+
+-- Call Assign(node), and collect all of its results into an SCC.
+data AddToSCC :: AdjacencyList -> Acc' -> * -> Exp Acc'
+type instance Eval (AddToSCC adj '(sccs, used) node) =
+    Eval (UpdateSCCs '(sccs, used) =<< Assign adj node '( '[], used))
+
+-- Add the generated SCC to SCCs if it is not empty.
+data UpdateSCCs :: Acc' -> Acc -> Exp Acc'
+type instance Eval (UpdateSCCs '(sccs, used) '(scc, used')) =
+    If (Eval (Null scc))
+       '(sccs, used)
+       '(scc ': sccs, used')
+
+-- Assign adds node to the SCC if not used, then Assigns all in-edges.
+data Assign :: AdjacencyList -> * -> Acc -> Exp Acc
+type instance Eval (Assign adj node '(scc, used)) =
     Eval (UnBool
-            (Pure '(stack, used, list))            -- False
-            (DFS compare el' '(stack, used, list)) -- True
-            -- Condition
-            (Eval (Eval (compare el el') && Eval (Not (Contains el' used))))
-        )
-
--- Step 3 of Kosaraju's algorithm: SCC finding.
--- Because we're just looking for loops, we fail as soon as we find an SCC with size larger than one.
--- We still look for all SCCs for error messaging, however.
-
-type Acc' = ([[*]], [*], [*]) -- result, used, list
-
-data DoSCC :: Comp -> [*] -> Exp [*]
-type instance Eval (DoSCC c list) = FlattenSingletons (Eval (SCC c list))
-
--- The order of application matters, and in this case we must go L->R. So, Foldl.
-data SCC :: Comp -> [*] -> Exp [[*]]
-type instance Eval (SCC c list) = Eval (GetResult =<< Foldl (AddToSCC c) '( '[], '[], list) list)
-
-data GetResult :: Acc' -> Exp [[*]]
-type instance Eval (GetResult '(result, used, list)) = result
-
--- Given a node, attempt to assign it to a new SCC if it is not already used.
--- Then update the list of SCCs with that SCC (UpdateRes).
-data AddToSCC :: Comp -> Acc' -> * -> Exp Acc'
-type instance Eval (AddToSCC c '(result, used, list) el) =
-    Eval (UnBool
-           (UpdateRes result =<< Assign c el '( '[], used, list)) -- False
-           (Pure '(result, used, list)) -- True
-           (Contains el used)) -- Condition
-
-data UpdateRes :: [[*]] -> Acc -> Exp Acc'
-type instance Eval (UpdateRes result '(res, used, list)) =
-    '(Append res result, used, list)
-
--- Assign(el) returns all Assign(el') for el'->el, and el itself in a new SCC.
--- Add el to result and used, and then check all other nodes via AssignIfUnused.
-data Assign :: Comp -> * -> Acc -> Exp Acc
-type instance Eval (Assign c el '(result, used, list)) =
-    Eval (Foldr (AssignIfUnused c el) '(el ': result, el ': used, list) list)
-
--- Try all nodes el' to check if el'->el, if so Assign.
-data AssignIfUnused :: Comp -> * -> * -> Acc -> Exp Acc
-type instance Eval (AssignIfUnused compare el el' '(res, used, list)) =
-    Eval (UnBool
-            (Pure '(res, used, list)) -- False
-            (Assign compare el' '(res, used, list)) -- True
-            (Not (Contains el' used) &&& compare el' el)
+            (Foldr (Assign adj) '(node ': scc, node ': used) =<< GetInEdges adj node)
+            (Pure '(scc, used))
+            (Contains node used)
     )
 
-infixr 3 &&&
-type family (&&&) (b1 :: Exp Bool) (b2 :: Exp Bool) :: Bool where
-    b1 &&& b2 = Eval (Eval b1 && Eval b2)
+-- Bonus step: since we want no loops, we check that every SCC has size one.
 
-type family FlattenSingletons (xss :: [[*]]) :: [*] where
-    FlattenSingletons '[] = '[]
-    FlattenSingletons ('[x] ': xs) = x ': FlattenSingletons xs
-    FlattenSingletons (xss ': xs) =
+data FlattenSingletons :: [[*]] -> Exp [*]
+type instance Eval (FlattenSingletons xss) = FLS xss
+
+type family FLS (xss :: [[*]]) :: [*] where
+    FLS '[] = '[]
+    FLS ('[x] ': xs) = x ': FLS xs
+    FLS (xss ': xs) =
         TypeError (Text "Dependency loop detected!" :$$:
             Text "Functions of types " :<>: ShowType xss :<>: Text " form a loop!" :$$:
             Text "Their execution cannot be ordered." :$$:
