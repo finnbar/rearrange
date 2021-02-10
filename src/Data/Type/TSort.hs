@@ -2,10 +2,10 @@
 
 module Data.Type.TSort where
 
-import Data.Type.Utils hiding (Fst, If)
+import Data.Type.Utils (Append, Contains, Foldl, NoDuplicates)
 import Data.Type.AdjacencyList
 import Data.Type.Dependencies (IsLessThan)
-import Data.Type.HList
+import Data.Type.HList (HList, RearrangeList(..))
 
 import Fcf
 import GHC.TypeLits
@@ -28,8 +28,7 @@ type instance Eval (RunTopsortMem adj) =
 
 -- Steps 1 and 2: do a topological sort.
 
--- Loop through the nodes, doing a DFS on all unused.
--- Then return the stack.
+-- Loop through the nodes, doing a DFS on all unused. Then return the stack.
 data DoTopsort :: AdjacencyList -> Exp [*]
 type instance Eval (DoTopsort adj) =
     Eval (Fst =<< Foldr (DFS adj) EmptyAcc (Eval (Keys adj)))
@@ -38,7 +37,9 @@ type instance Eval (DoTopsort adj) =
 data DFS :: AdjacencyList -> * -> Acc -> Exp Acc
 type instance Eval (DFS adj node '(stack, used)) =
     Eval (UnBool
-            (UpdateStack node =<< Foldr (DFS adj) '(stack, node ': used) =<< GetOutEdges adj node)
+            (UpdateStack node
+                =<< Foldr (DFS adj) '(stack, node ': used)
+                =<< GetOutEdges adj node)
             (Pure '(stack, used))
             (Contains node used))
 
@@ -65,6 +66,7 @@ type instance Eval (AddToSCC adj '(sccs, used) node) =
     Eval (UpdateSCCs '(sccs, used) =<< Assign adj node '( '[], used))
 
 -- Add the generated SCC to SCCs if it is not empty.
+-- We must Append rather than (':) as to preserve topological ordering.
 data UpdateSCCs :: Acc' -> Acc -> Exp Acc'
 type instance Eval (UpdateSCCs '(sccs, used) '(scc, used')) =
     If (Eval (Null scc))
@@ -75,7 +77,8 @@ type instance Eval (UpdateSCCs '(sccs, used) '(scc, used')) =
 data Assign :: AdjacencyList -> * -> Acc -> Exp Acc
 type instance Eval (Assign adj node '(scc, used)) =
     Eval (UnBool
-            (Foldr (Assign adj) '(node ': scc, node ': used) =<< GetInEdges adj node)
+            (Foldr (Assign adj) '(node ': scc, node ': used)
+                =<< GetInEdges adj node)
             (Pure '(scc, used))
             (Contains node used))
 
