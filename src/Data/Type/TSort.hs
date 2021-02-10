@@ -29,28 +29,23 @@ type instance Eval (RunTopsortMem adj) =
 -- Steps 1 and 2: do a topological sort.
 
 -- Loop through the nodes, doing a DFS on all unused.
+-- Then return the stack.
 data DoTopsort :: AdjacencyList -> Exp [*]
 type instance Eval (DoTopsort adj) =
-    Eval (Fst =<< Foldr (ExpandUnused adj) EmptyAcc (Eval (Keys adj)))
+    Eval (Fst =<< Foldr (DFS adj) EmptyAcc (Eval (Keys adj)))
 
--- Check whether a node is used yet - if not, run DFS.
-data ExpandUnused :: AdjacencyList -> * -> Acc -> Exp Acc
-type instance Eval (ExpandUnused adj node '(stack, used)) =
+-- Check whether a node is used yet - if not, DFS on it.
+data DFS :: AdjacencyList -> * -> Acc -> Exp Acc
+type instance Eval (DFS adj node '(stack, used)) =
     Eval (UnBool
-            (UpdateStack node =<< DFS adj node '(stack, used))
+            (UpdateStack node =<< Foldr (DFS adj) '(stack, node ': used) =<< GetOutEdges adj node)
             (Pure '(stack, used))
-            (Contains node used)
-    )
+            (Contains node used))
 
 -- Once an expansion is done, add the node to the stack.
 data UpdateStack :: * -> Acc -> Exp Acc
 type instance Eval (UpdateStack node '(stack, used)) =
     '(node ': stack, used)
-
--- DFS by attempting to expand each out edge of the given node.
-data DFS :: AdjacencyList -> * -> Acc -> Exp Acc
-type instance Eval (DFS adj node '(stack, used)) =
-    Eval (Foldr (ExpandUnused adj) '(stack, node ': used) =<< GetOutEdges adj node)
 
 -- Step 3: Look for SCC components in topologically sorted list.
 
