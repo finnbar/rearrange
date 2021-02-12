@@ -26,4 +26,4 @@ main = do
     let env = toSet addrs
     runMems program env
     cOutput
-    runPartialMems program env (Ext (AddrProxy @"inter") Empty) cOutput
+    runPartialMems program env ["in"] cOutput

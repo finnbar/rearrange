@@ -3,7 +3,7 @@
 module Data.RunMemory where
 
 import Data.Memory (Memory(..), TupleUnion)
-import Data.MemoryAddr (MAddr(..), MAddrProxy(..), MemIntersects)
+import Data.MemoryAddr (MAddr(..))
 import Data.Type.Utils
 
 import Data.Type.HList
@@ -35,44 +35,35 @@ instance (RunMems xs env, Subset (TupleUnion s) env) =>
 
 -- PARTIAL UPDATE (run memory functions only if the proxy input dictates it)
 
-type family Proxify (xs :: [*]) :: [*] where
-    Proxify '[] = '[]
-    Proxify (MAddr s t ': xs) = MAddrProxy s ': Proxify xs
+class RunPartialMems xs env where
+    runPartialMems :: HList xs -> Set env -> [String] -> IO () -> IO ()
 
-class RunPartialMems xs env ps where
-    runPartialMems :: HList xs -> Set env -> Set ps -> IO () -> IO ()
-
-instance RunPartialMems '[] env ps where
+instance RunPartialMems '[] env where
     runPartialMems HNil _ _ finaliser = finaliser
 
-instance (b ~ MemIntersects rs ps, RunPartialMemsCond (Memory '(rs, ws) c ': xs) env ps b) 
-    => RunPartialMems (Memory '(rs, ws) c ': xs) env ps where
-        runPartialMems mems env ps finaliser =
-            runPartialMemsCond (Proxy :: Proxy b) mems env ps finaliser
+instance (RunPartialMems xs env, StringInEffects rs, EffectsAsString ws, Subset (Union rs ws) env)
+    => RunPartialMems (Memory '(rs, ws) c ': xs) env where
+        runPartialMems (mem :+: mems) env partial fin =
+            if any (stringInEffects (Proxy :: Proxy rs)) partial
+            then do
+                res <- runMem mem env
+                runPartialMems mems env (partial ++ effectsAsString (Proxy :: Proxy ws)) fin
+            else runPartialMems mems env partial fin
 
-class RunPartialMemsCond xs env ps (b :: Bool) where
-    runPartialMemsCond :: Proxy b -> HList xs -> Set env -> Set ps -> IO () -> IO ()
+class StringInEffects rs where
+    stringInEffects :: Proxy rs -> String -> Bool
 
-instance RunPartialMemsCond '[] env ps bool where
-    runPartialMemsCond _ HNil _ _ finaliser = finaliser
+instance StringInEffects '[] where
+    stringInEffects _ _ = False
 
-instance (RunPartialMems xs env (Union (Proxify rs) ps), Unionable (Proxify rs) ps,
-    'True ~ MemIntersects rs ps, Subset (Union rs ws) env, ToProxySet rs)
-    => RunPartialMemsCond (Memory '(rs, ws) c ': xs) env ps 'True where
-        runPartialMemsCond _ (mem :+: mems) env partial finaliser = do
-            res <- runMem mem env
-            runPartialMems mems env (toProxySet (Proxy :: Proxy rs) `union` partial) finaliser
+instance (KnownSymbol s, StringInEffects xs) => StringInEffects (MAddr s t ': xs) where
+    stringInEffects Proxy st = symbolVal (Proxy :: Proxy s) == st || stringInEffects (Proxy :: Proxy xs) st
 
-instance (RunPartialMems xs env ps, 'False ~ MemIntersects rs ps)
-    => RunPartialMemsCond (Memory '(rs, ws) c ': xs) env ps 'False where
-        runPartialMemsCond _ (_ :+: mems) env partial finaliser =
-            runPartialMems mems env partial finaliser
+class EffectsAsString ws where
+    effectsAsString :: Proxy ws -> [String]
 
-class ToProxySet rs where
-    toProxySet :: Proxy rs -> Set (Proxify rs)
+instance EffectsAsString '[] where
+    effectsAsString Proxy = []
 
-instance ToProxySet '[] where
-    toProxySet Proxy = Empty
-
-instance ToProxySet xs => ToProxySet (MAddr s t ': xs) where
-    toProxySet Proxy = Ext (AddrProxy :: MAddrProxy s) $ toProxySet (Proxy :: Proxy xs)
+instance (KnownSymbol s, EffectsAsString xs) => EffectsAsString (MAddr s t ': xs) where
+    effectsAsString Proxy = symbolVal (Proxy :: Proxy s) : effectsAsString (Proxy :: Proxy xs)

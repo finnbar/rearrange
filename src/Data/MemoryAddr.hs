@@ -2,8 +2,7 @@
 
 module Data.MemoryAddr (
     readCell, writeCell,
-    MAddr(..), MAddrProxy(..),
-    MemIntersects
+    MAddr(..)
     ) where
 
 import Data.Memory (Memory(Mem))
@@ -25,20 +24,3 @@ readCell = Mem $ \(Ext (Addr pt) Empty) -> peek pt
 
 writeCell :: forall s t. Storable t => t -> Memory '( '[], '[MAddr s t] ) ()
 writeCell x = Mem $ \(Ext (Addr pt) Empty) -> poke pt x
-
--- Define a proxy-like input for a MAddr when we don't know the pointer.
-
-data MAddrProxy (s :: Symbol) = AddrProxy
-    deriving Show
-type instance Cmp (MAddrProxy s) (MAddrProxy s') = CmpSymbol s s'
-
-type family MemIntersects (rs :: [*]) (ps :: [*]) :: Bool where
-    MemIntersects rs ps = NonEmptyIntersect (DropMAddrs rs) (DropMAddrProxys ps)
-
-type family DropMAddrs (rs :: [*]) :: [Symbol] where
-    DropMAddrs '[] = '[]
-    DropMAddrs (MAddr s t ': xs) = s ': DropMAddrs xs
-
-type family DropMAddrProxys (ps :: [*]) :: [Symbol] where
-    DropMAddrProxys '[] = '[]
-    DropMAddrProxys (MAddrProxy s ': xs) = s ': DropMAddrProxys xs
