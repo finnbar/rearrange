@@ -1,17 +1,16 @@
-{-# LANGUAGE RankNTypes, UndecidableInstances, FlexibleInstances #-}
+{-# LANGUAGE RankNTypes, UndecidableInstances, FlexibleInstances, ScopedTypeVariables #-}
 
 module Data.MemoryAddr (
     readCell, writeCell,
-    MAddr(..)
+    MAddr(..), MAddrUpdate(..), updated
     ) where
 
 import Data.Memory (Memory(Mem))
-import Data.Type.Utils (NonEmptyIntersect)
-import Data.Type.HList
 
 import Foreign.Storable (Storable(poke, peek))
 import Foreign.Ptr (Ptr)
-import GHC.TypeLits (Symbol, CmpSymbol)
+import GHC.TypeLits
+import Data.Proxy
 import Data.Type.Set (Cmp, Set(Empty, Ext))
 
 data MAddr (s :: Symbol) t where
@@ -24,3 +23,8 @@ readCell = Mem $ \(Ext (Addr pt) Empty) -> peek pt
 
 writeCell :: forall s t. Storable t => t -> Memory '( '[], '[MAddr s t] ) ()
 writeCell x = Mem $ \(Ext (Addr pt) Empty) -> poke pt x
+
+newtype MAddrUpdate = AddrUpdate String
+
+updated :: forall s t. KnownSymbol s => MAddr s t -> MAddrUpdate
+updated _ = AddrUpdate $ symbolVal (Proxy :: Proxy s)

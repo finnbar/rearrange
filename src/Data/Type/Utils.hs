@@ -69,12 +69,3 @@ data Foldl :: (b -> a -> Exp b) -> b -> t a -> Exp b
 type instance Eval (Foldl f acc '[]) = acc
 type instance Eval (Foldl f acc (x ': xs)) =
     Eval (Foldl f (Eval (f acc x)) xs)
-
-class AsBool (b :: Bool) where
-    asBool :: Proxy b -> Bool
-
-instance AsBool True where
-    asBool _ = True
-
-instance AsBool False where
-    asBool _ = False
