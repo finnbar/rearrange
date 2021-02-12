@@ -1,4 +1,4 @@
-{-# LANGUAGE ForeignFunctionInterface, DataKinds #-}
+{-# LANGUAGE ForeignFunctionInterface, DataKinds, TypeApplications #-}
 
 module Main where
 
@@ -22,5 +22,8 @@ main = do
         toAddr @"inter" intermediateCell :+:
         toAddr @"out" outputCell :+: HNil
     cInput
-    runMems (topsort $ example2 :+: example :+: HNil) (toSet addrs)
+    let program = topsort $ example2 :+: example :+: example4 :+: HNil
+    let env = toSet addrs
+    runMems program env
     cOutput
+    runPartialMems program env (Ext (AddrProxy @"inter") Empty) cOutput

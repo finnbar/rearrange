@@ -5,6 +5,7 @@ module Data.Type.Utils where
 import Data.Type.Set (MemberP)
 import GHC.TypeLits
 import Data.Kind
+import Data.Proxy
 
 import Fcf (Exp, Eval)
 
@@ -21,7 +22,7 @@ type family And (x :: Bool) (y :: Bool) :: Bool where
     And 'True 'True = 'True
     And x     y     = 'False
 
-type family NonEmptyIntersect (xs :: [*]) (ys :: [*]) :: Bool where
+type family NonEmptyIntersect (xs :: [k]) (ys :: [k]) :: Bool where
     NonEmptyIntersect '[] ys       = 'False
     NonEmptyIntersect xs '[]       = 'False
     NonEmptyIntersect (x ': xs) ys = Or (MemberP x ys) (NonEmptyIntersect xs ys)
@@ -68,3 +69,12 @@ data Foldl :: (b -> a -> Exp b) -> b -> t a -> Exp b
 type instance Eval (Foldl f acc '[]) = acc
 type instance Eval (Foldl f acc (x ': xs)) =
     Eval (Foldl f (Eval (f acc x)) xs)
+
+class AsBool (b :: Bool) where
+    asBool :: Proxy b -> Bool
+
+instance AsBool True where
+    asBool _ = True
+
+instance AsBool False where
+    asBool _ = False

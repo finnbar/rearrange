@@ -2,7 +2,8 @@
 
 module Data.Memory (
     Memory(..),
-    TupleUnion
+    TupleUnion,
+    unsafeMemoryIO
 ) where
 
 import Prelude hiding (Monad(..))
@@ -36,3 +37,6 @@ instance Effect Memory where
     (Mem e) >>= k =
         Mem $ \fg -> let (f, g) = split fg
                       in e f P.>>= ((\fn -> fn g) . runMemory . k)
+
+unsafeMemoryIO :: IO a -> Memory '( '[], '[]) a
+unsafeMemoryIO act = Mem $ \Empty -> act

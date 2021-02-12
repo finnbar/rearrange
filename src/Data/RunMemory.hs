@@ -3,10 +3,13 @@
 module Data.RunMemory where
 
 import Data.Memory (Memory(..), TupleUnion)
+import Data.MemoryAddr (MAddr(..), MAddrProxy(..), MemIntersects)
 import Data.Type.Utils
 
 import Data.Type.HList
-import Data.Type.Set
+import Data.Type.Set hiding (Proxy)
+import GHC.TypeLits
+import Data.Proxy
 
 -- FULL UPDATE (run all memory functions)
 
@@ -32,52 +35,44 @@ instance (RunMems xs env, Subset (TupleUnion s) env) =>
 
 -- PARTIAL UPDATE (run memory functions only if the proxy input dictates it)
 
-type family PartialMemoryReturn (xs :: [*]) (ys :: [*]) :: [*] where
-    PartialMemoryReturn '[] ys = '[]
-    PartialMemoryReturn (Memory '(rs, ws) b ': xs) ys = 
-        If (NonEmptyIntersect rs (DropProxy ys))
-           (b ': PartialMemoryReturn xs (Combine ys (AddProxy ws)))
-           (PartialMemoryReturn xs ys)
+type family Proxify (xs :: [*]) :: [*] where
+    Proxify '[] = '[]
+    Proxify (MAddr s t ': xs) = MAddrProxy s ': Proxify xs
 
-type family DropProxy (xs :: [*]) :: [*] where
-    DropProxy '[] = '[]
-    DropProxy (Proxy x ': xs) = x ': DropProxy xs
+class RunPartialMems xs env ps where
+    runPartialMems :: HList xs -> Set env -> Set ps -> IO () -> IO ()
 
-type family AddProxy (xs :: [*]) :: [*] where
-    AddProxy '[] = '[]
-    AddProxy (x ': xs) = Proxy x ': AddProxy xs
+instance RunPartialMems '[] env ps where
+    runPartialMems HNil _ _ finaliser = finaliser
 
-class RunPartialMems xs ys env where
-    --runPartialMems :: HList xs -> Set env -> Proxy ys -> IO (HList (...))
-    runPartialMems :: HList xs -> Set env -> HList ys -> IO (HList (PartialMemoryReturn xs ys))
+instance (b ~ MemIntersects rs ps, RunPartialMemsCond (Memory '(rs, ws) c ': xs) env ps b) 
+    => RunPartialMems (Memory '(rs, ws) c ': xs) env ps where
+        runPartialMems mems env ps finaliser =
+            runPartialMemsCond (Proxy :: Proxy b) mems env ps finaliser
 
-instance RunPartialMems '[] ys env where
-    runPartialMems HNil _ _ = return HNil
+class RunPartialMemsCond xs env ps (b :: Bool) where
+    runPartialMemsCond :: Proxy b -> HList xs -> Set env -> Set ps -> IO () -> IO ()
 
-instance (RunPartialMemsCond (Memory '(rs, ws) a ': xs) ys env b, b ~ NonEmptyIntersect rs (DropProxy ys)) =>
-    RunPartialMems (Memory '(rs, ws) a ': xs) ys env where
-        runPartialMems = rpms (Proxy :: Proxy b)
+instance RunPartialMemsCond '[] env ps bool where
+    runPartialMemsCond _ HNil _ _ finaliser = finaliser
 
-class RunPartialMemsCond xs ys env (b :: Bool) where
-    rpms :: Proxy b -> HList xs -> Set env -> HList ys -> IO (HList (PartialMemoryReturn xs ys))
+instance (RunPartialMems xs env (Union (Proxify rs) ps), Unionable (Proxify rs) ps,
+    'True ~ MemIntersects rs ps, Subset (Union rs ws) env, ToProxySet rs)
+    => RunPartialMemsCond (Memory '(rs, ws) c ': xs) env ps 'True where
+        runPartialMemsCond _ (mem :+: mems) env partial finaliser = do
+            res <- runMem mem env
+            runPartialMems mems env (toProxySet (Proxy :: Proxy rs) `union` partial) finaliser
 
-instance (RunPartialMems xs ys env, 'False ~ NonEmptyIntersect rs (DropProxy ys)) =>
-    RunPartialMemsCond (Memory '(rs, ws) a ': xs) ys env 'False where
-        rpms _ (x :+: xs) = runPartialMems xs
+instance (RunPartialMems xs env ps, 'False ~ MemIntersects rs ps)
+    => RunPartialMemsCond (Memory '(rs, ws) c ': xs) env ps 'False where
+        runPartialMemsCond _ (_ :+: mems) env partial finaliser =
+            runPartialMems mems env partial finaliser
 
-instance (RunPartialMems xs (Combine ys (AddProxy ws)) env, 'True ~ NonEmptyIntersect rs (DropProxy ys),
-    BuildProxies ws, Subset (Union rs ws) env) =>
-    RunPartialMemsCond (Memory '(rs, ws) a ': xs) ys env 'True where
-        rpms _ (x :+: xs) env partials = do
-            res <- runMem x env
-            ress <- runPartialMems xs env (hCombine partials (proxies (Proxy :: Proxy (HList ws))))
-            return $ res :+: ress
+class ToProxySet rs where
+    toProxySet :: Proxy rs -> Set (Proxify rs)
 
-class BuildProxies xs where
-    proxies :: Proxy (HList xs) -> HList (AddProxy xs)
+instance ToProxySet '[] where
+    toProxySet Proxy = Empty
 
-instance BuildProxies '[] where
-    proxies _ = HNil
-
-instance BuildProxies xs => BuildProxies (x ': xs) where
-    proxies _ = (Proxy :: Proxy x) :+: proxies (Proxy :: Proxy (HList xs))
+instance ToProxySet xs => ToProxySet (MAddr s t ': xs) where
+    toProxySet Proxy = Ext (AddrProxy :: MAddrProxy s) $ toProxySet (Proxy :: Proxy xs)
