@@ -17,7 +17,6 @@ foreign import ccall "coutput" cOutput :: IO ()
 
 main :: IO ()
 main = do
-    input <- toAddr @"in" inputCell
     addrs <- distribute $
         toAddr @"in" inputCell :+:
         toAddr @"inter" intermediateCell :+:
@@ -27,4 +26,4 @@ main = do
     let env = toSet addrs
     runMems program env
     cOutput
-    runPartialMems program env [updated input] cOutput
+    runPartialMems program env [updatedInEnv @"in" env, updatedInEnv @"out" env] cOutput

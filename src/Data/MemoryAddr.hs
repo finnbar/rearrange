@@ -1,8 +1,11 @@
-{-# LANGUAGE RankNTypes, UndecidableInstances, FlexibleInstances, ScopedTypeVariables #-}
+{-# LANGUAGE RankNTypes, UndecidableInstances, FlexibleInstances,
+    ScopedTypeVariables, AllowAmbiguousTypes, FunctionalDependencies,
+    FlexibleContexts #-}
 
 module Data.MemoryAddr (
     readCell, writeCell,
-    MAddr(..), MAddrUpdate(..), updated
+    MAddr(..), MAddrUpdate(..),
+    updated, updatedInEnv
     ) where
 
 import Data.Memory (Memory(Mem))
@@ -28,3 +31,16 @@ newtype MAddrUpdate = AddrUpdate String
 
 updated :: forall s t. KnownSymbol s => MAddr s t -> MAddrUpdate
 updated _ = AddrUpdate $ symbolVal (Proxy :: Proxy s)
+
+updatedInEnv :: forall s env t. (KnownSymbol s, MemberSymbol s env (MAddr s t)) =>
+    Set env -> MAddrUpdate
+updatedInEnv = updated . memberSymbol (Proxy :: Proxy s)
+
+class MemberSymbol s env out | s env -> out where
+    memberSymbol :: Proxy s -> Set env -> out
+
+instance {-# OVERLAPPING #-} MemberSymbol s (MAddr s t ': xs) (MAddr s t) where
+    memberSymbol _ (Ext addrS _) = addrS
+
+instance {-# OVERLAPPABLE #-} MemberSymbol s xs o => MemberSymbol s (MAddr s' t ': xs) o where
+    memberSymbol prox (Ext _ mems) = memberSymbol prox mems
