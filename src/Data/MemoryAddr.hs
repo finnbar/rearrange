@@ -39,6 +39,12 @@ updatedInEnv = updated . memberSymbol (Proxy :: Proxy s)
 class MemberSymbol s env out | s env -> out where
     memberSymbol :: Proxy s -> Set env -> out
 
+instance (TypeError (Text "Cannot find " :<>: ShowType s :<>:
+    Text " in environment for updatedInEnv."
+    :$$: Text "Did you spell it correctly?"))
+    => MemberSymbol s '[] (MAddr s ()) where
+        memberSymbol _ _ = error "unreachable"
+
 instance {-# OVERLAPPING #-} MemberSymbol s (MAddr s t ': xs) (MAddr s t) where
     memberSymbol _ (Ext addrS _) = addrS
 

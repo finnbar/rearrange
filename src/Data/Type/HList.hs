@@ -7,6 +7,8 @@ module Data.Type.HList (
     ) where
 
 import Data.Type.Utils (Remove, Combine)
+import GHC.TypeLits
+import Data.Kind
 
 -- The HList structure.
 
@@ -36,11 +38,23 @@ instance {-# OVERLAPPABLE #-} (RetrieveType x xs xs')
 
 -- RearrangeList, which allows us to bring a type-level construct to values.
 
+-- TODO: fix this
+type family RearrangementError :: Constraint where
+    RearrangementError =
+        TypeError (Text "Could not rearrange between the two types provided." :$$:
+            Text "Make sure that both types are rearrangements of one another!")
+
 class RearrangeList old new where
     rearrange :: HList old -> HList new
 
 instance RearrangeList '[] '[] where
     rearrange _ = HNil
+
+instance RearrangementError => RearrangeList '[] (y ': ys) where
+    rearrange _ = error "unreachable"
+
+instance RearrangementError => RearrangeList (x ': xs) '[] where
+    rearrange _ = error "unreachable"
 
 instance (old' ~ Remove n old, RearrangeList old' ns, RetrieveType n old old')
     => RearrangeList old (n ': ns) where
