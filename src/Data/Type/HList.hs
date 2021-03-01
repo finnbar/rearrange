@@ -102,10 +102,5 @@ instance (len ~ TypeLen xs, RestructureList (FirstN old len) xs,
     restructure list = restructure thisList :+: restructure rest
         where (thisList, rest) = subHList list (Proxy :: Proxy len)
     
-type family IsHList (x :: *) :: Bool where
-    IsHList (HList xs) = 'True
-    IsHList x          = 'False
-
-instance (RestructureList olds xss, IsHList x ~ 'False)
-    => RestructureList (x ': olds) (x ': xss) where
+instance RestructureList olds xss => RestructureList (x ': olds) (x ': xss) where
     restructure (l :+: ls) = l :+: restructure ls
