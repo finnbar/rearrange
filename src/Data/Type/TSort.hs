@@ -93,6 +93,6 @@ type family FLS (xss :: [[*]]) :: [*] where
             Text "Their execution cannot be ordered." :$$:
             Text "To allow compilation, break the loop somehow.")
 
-topsort :: (NoDuplicates xs, RearrangeList xs (TopsortMem IsLessThan xs)) =>
-    HList xs -> HList (TopsortMem IsLessThan xs)
+topsort :: (NoDuplicates xs, RearrangeList xs xs', xs' ~ TopsortMem IsLessThan xs) =>
+    HList xs -> HList xs'
 topsort = rearrange

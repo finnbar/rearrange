@@ -2,9 +2,7 @@
 
 module Data.Type.AdjacencyList where
 
-import qualified Data.Type.Utils as U (Fst, Snd)
-import Data.Type.Map hiding (Map)
-import Data.Type.Set hiding (Filter)
+import Data.Type.Map (Mapping(..))
 
 import GHC.TypeLits
 import Fcf
