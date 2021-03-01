@@ -62,6 +62,8 @@ instance (old' ~ Remove n old, GetHListElem n old old', RearrangeList old' ns)
         rearrange l = elem :+: rearrange l'
             where (elem, l') = getHListElem l :: (n, HList old')
 
+-- SubHList, which gets the first n elements of a HList at type level.
+
 type family TypeLen (list :: [*]) :: Nat where
     TypeLen '[] = 0
     TypeLen (HList x ': xs) = TypeLen x + TypeLen xs
@@ -90,6 +92,8 @@ instance (SubHList xs (n-1), FirstNSucc x xs n, AfterNSucc x xs n)
     subHList (o :+: os) _ = (o :+: before, after)
         where (before, after) = subHList os (Proxy :: Proxy (n-1))
 
+-- RestructureList, which takes a flat HList and reshapes it.
+
 class RestructureList old new where
     restructure :: HList old -> HList new
 
@@ -104,3 +108,17 @@ instance (len ~ TypeLen xs, RestructureList (FirstN old len) xs,
     
 instance RestructureList olds xss => RestructureList (x ': olds) (x ': xss) where
     restructure (l :+: ls) = l :+: restructure ls
+
+-- TransformList, which applies both rearranging and reshaping.
+
+class TransformList old new where
+    transform :: HList old -> HList new
+
+type family FLL (xs :: [*]) :: [*] where
+    FLL '[] = '[]
+    FLL (HList xs ': xss) = Combine (FLL xs) (FLL xss)
+    FLL (x ': xs) = x ': FLL xs
+
+instance (flat ~ FLL new, RearrangeList old flat, RestructureList flat new) =>
+    TransformList old new where
+    transform = restructure . (rearrange :: HList old -> HList flat)
