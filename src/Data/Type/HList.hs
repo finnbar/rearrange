@@ -4,7 +4,9 @@ module Data.Type.HList (
     HList(..),
     hCombine,
     RearrangeList(..),
-    RestructureList(..)
+    RestructureList(..),
+    TransformList(..),
+    SubHList(..)
     ) where
 
 import Data.Type.Utils (Remove, Combine)
@@ -20,6 +22,12 @@ data HList :: [*] -> * where
 
 infixr 5 :+:
 
+instance Show (HList '[]) where
+    show HNil = "HNil"
+
+instance (Show x, Show (HList xs)) => Show (HList (x ': xs)) where
+    show (x :+: xs) = "(" ++ show x ++ ") : " ++ show xs
+
 hCombine :: HList xs -> HList ys -> HList (Combine xs ys)
 hCombine HNil ys = ys
 hCombine (x :+: xs) ys = x :+: hCombine xs ys
@@ -33,8 +41,8 @@ class GetHListElem x ts ts' where
 instance {-# OVERLAPPING #-} GetHListElem x (x ': xs) xs where
     getHListElem (x :+: xs) = (x, xs)
 
-instance {-# OVERLAPPABLE #-} (GetHListElem x xs xs')
-    => GetHListElem x (y ': xs) (y ': xs') where
+instance (zs ~ (y ': xs'), GetHListElem x xs xs')
+    => GetHListElem x (y ': xs) zs where
         getHListElem (y :+: xs) = (res, y :+: rest)
             where (res, rest) = getHListElem xs
 
@@ -84,11 +92,11 @@ type AfterNSucc x xs n = AfterN (x ': xs) n ~ AfterN xs (n-1)
 class SubHList old (n :: Nat) where
     subHList :: HList old -> Proxy n -> (HList (FirstN old n), HList (AfterN old n))
     
-instance SubHList olds 0 where
+instance {-# OVERLAPPING #-} SubHList old 0 where
     subHList xs _ = (HNil, xs)
 
-instance (SubHList xs (n-1), FirstNSucc x xs n, AfterNSucc x xs n)
-    => SubHList (x ': xs) n where
+instance (old ~ (x ': xs), SubHList xs (n-1), FirstNSucc x xs n, AfterNSucc x xs n)
+    => SubHList old n where
     subHList (o :+: os) _ = (o :+: before, after)
         where (before, after) = subHList os (Proxy :: Proxy (n-1))
 

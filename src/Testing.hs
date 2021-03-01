@@ -14,3 +14,10 @@ type MC = MAddr "out" Int
 type A = Memory '( '[MA], '[MB]) ()
 type B = Memory '( '[MB], '[MC]) ()
 type C = Memory '( '[MC], '[MA]) ()
+
+type family Singletons (list :: [*]) :: [*] where
+    Singletons '[] = '[]
+    Singletons (x ': xs) = HList '[x] ': Singletons xs
+
+toSingletons :: (xs' ~ Singletons xs, RestructureList xs xs') => HList xs -> HList xs'
+toSingletons = restructure
