@@ -6,7 +6,8 @@ module Data.Type.HList (
     RearrangeList(..),
     RestructureList(..),
     TransformList(..),
-    SubHList(..)
+    SubHList(..),
+    FlattenToHList
     ) where
 
 import Data.Type.Utils (Remove, Combine)
@@ -35,16 +36,29 @@ hCombine (x :+: xs) ys = x :+: hCombine xs ys
 -- GetHListElem, which finds an element of the type and returns the list
 -- without that type.
 
-class GetHListElem x ts ts' where
-    getHListElem :: HList ts -> (x, HList ts')
+class GetHListElem x inp out where
+    getHListElem :: HList inp -> (x, HList out)
 
 instance {-# OVERLAPPING #-} GetHListElem x (x ': xs) xs where
     getHListElem (x :+: xs) = (x, xs)
 
-instance (zs ~ (y ': xs'), GetHListElem x xs xs')
-    => GetHListElem x (y ': xs) zs where
+instance (out ~ (o ': out'), GetHListElem x inp' out')
+    => GetHListElem x (o ': inp') out where
         getHListElem (y :+: xs) = (res, y :+: rest)
             where (res, rest) = getHListElem xs
+
+-- RunComponents, which is a restricted version of map.
+
+class RunComponents xs a where
+    runComponents :: (a -> IO ()) -> HList xs -> IO ()
+
+instance RunComponents '[] a where
+    runComponents _ HNil = return ()
+
+instance RunComponents xs a => RunComponents (a ': xs) a where
+    runComponents f (x :+: xs) = do
+        f x
+        runComponents f xs
 
 -- RearrangeList, which allows us to bring a type-level construct to values.
 
@@ -95,6 +109,8 @@ class SubHList old (n :: Nat) where
 instance {-# OVERLAPPING #-} SubHList old 0 where
     subHList xs _ = (HNil, xs)
 
+-- FirstNSucc, AfterNSucc needed because we can guarantee that n > 0, but the
+-- type checker cannot and thus can't perform the expansion ...NSucc does.
 instance (old ~ (x ': xs), SubHList xs (n-1), FirstNSucc x xs n, AfterNSucc x xs n)
     => SubHList old n where
     subHList (o :+: os) _ = (o :+: before, after)
@@ -113,7 +129,7 @@ instance (len ~ TypeLen xs, RestructureList (FirstN old len) xs,
     => RestructureList old (HList xs ': xss) where
     restructure list = restructure thisList :+: restructure rest
         where (thisList, rest) = subHList list (Proxy :: Proxy len)
-    
+
 instance RestructureList olds xss => RestructureList (x ': olds) (x ': xss) where
     restructure (l :+: ls) = l :+: restructure ls
 
@@ -130,3 +146,9 @@ type family FLL (xs :: [*]) :: [*] where
 instance (flat ~ FLL new, RearrangeList old flat, RestructureList flat new) =>
     TransformList old new where
     transform = restructure . (rearrange :: HList old -> HList flat)
+
+-- FlattenToHList, which removes a layer of nesting by using HLists.
+
+type family FlattenToHList (inp :: [[*]]) :: [*] where
+    FlattenToHList '[] = '[]
+    FlattenToHList (x ': xs) = HList x ': FlattenToHList xs

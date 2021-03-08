@@ -49,6 +49,9 @@ type family Combine (xs :: [*]) (ys :: [*]) :: [*] where
     Combine '[] ys = ys
     Combine (x ': xs) ys = x ': Combine xs ys
 
+data CombinePair :: ([*], [*]) -> Exp [*]
+type instance Eval (CombinePair '(xs, ys)) = Combine xs ys
+
 type family Append (x :: k) (xs :: [k]) :: [k] where
     Append x '[] = '[x]
     Append x (y ': ys) = y ': Append x ys

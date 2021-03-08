@@ -3,6 +3,7 @@
 module Data.Type.AdjacencyList where
 
 import Data.Type.Map (Mapping(..))
+import Data.Type.Utils (CombinePair)
 
 import GHC.TypeLits
 import Fcf
@@ -22,6 +23,9 @@ type instance Eval (GetInEdges adj x) = Eval (Snd =<< UnsafeLookup adj x)
 
 data GetOutEdges :: AdjacencyList -> * -> Exp [*]
 type instance Eval (GetOutEdges adj x) = Eval (Fst =<< UnsafeLookup adj x)
+
+data GetEdges :: AdjacencyList -> * -> Exp [*]
+type instance Eval (GetEdges adj x) = Eval (CombinePair =<< UnsafeLookup adj x)
 
 data Keys :: [Mapping k v] -> Exp [k]
 type instance Eval (Keys '[]) = '[]

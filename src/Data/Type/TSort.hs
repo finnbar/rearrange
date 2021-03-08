@@ -19,12 +19,12 @@ type Acc' = ([[*]], [*]) -- (SCCs, used nodes)
 type EmptyAcc' = '( '[], '[])
 
 -- Kosaraju's algorithm is just a topological sort followed by loop finding.
-type family TopsortMem (comp :: Comp) (mems :: [*]) :: [*] where
-    TopsortMem c mems =
-        Eval (RunTopsortMem =<< ToAdjacencyList c mems)
+data Topsort :: Comp -> [*] -> Exp [*]
+type instance Eval (Topsort comp types) =
+        Eval (RunTopsort =<< ToAdjacencyList comp types)
 
-data RunTopsortMem :: AdjacencyList -> Exp [*]
-type instance Eval (RunTopsortMem adj) =
+data RunTopsort :: AdjacencyList -> Exp [*]
+type instance Eval (RunTopsort adj) =
     Eval (FlattenSingletons =<< DoSCC adj =<< DoTopsort adj)
 
 -- Steps 1 and 2: do a topological sort.
@@ -93,6 +93,6 @@ type family FLS (xss :: [[*]]) :: [*] where
             Text "Their execution cannot be ordered." :$$:
             Text "To allow compilation, break the loop somehow.")
 
-topsort :: (NoDuplicates xs, RearrangeList xs xs', xs' ~ TopsortMem IsLessThan xs) =>
+topsort :: (NoDuplicates xs, RearrangeList xs xs', xs' ~ Eval (Topsort IsLessThan xs)) =>
     HList xs -> HList xs'
 topsort = rearrange
