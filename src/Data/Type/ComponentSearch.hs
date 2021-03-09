@@ -1,6 +1,8 @@
 {-# LANGUAGE UndecidableInstances, FlexibleContexts #-}
 
-module Data.Type.ComponentSearch where
+module Data.Type.ComponentSearch (
+    toComponents, toSortedComponents
+) where
 
 import Data.Type.AdjacencyList
 import Data.Type.Dependencies (IsLessThan)
@@ -12,7 +14,7 @@ import Fcf
 
 -- To break into connected components, simply UndirectedDFS to find it.
 -- TODO: A lot of this code is repeated from SCC finding.
--- Would be nice to have Data.Type.GraphAlgos to work off.
+-- Would be nice to have Data.Type.GraphAlgos to work with.
 -- Similarly, Data.Type.Utils is huge now.
 
 type Acc = ([*], [*]) -- (stack, used nodes)

@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 797423b1299b2c3b94ea8afcb97419c8af996ade926fb59449426f014659eb89
+-- hash: 22391ea70141917c7a3d9e05a328b9dc36ddd9549e33ee32d03f3c852dceca0d
 
 name:           rearrange
 version:        0.1.0.0
@@ -30,6 +30,7 @@ library
       Data.Memory
       Data.MemoryAddr
       Data.RunMemory
+      Data.RunMemoryConc
       Data.Type.AdjacencyList
       Data.Type.ComponentSearch
       Data.Type.Dependencies

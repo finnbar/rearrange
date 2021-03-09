@@ -7,7 +7,7 @@ import Rearrange
 import Prelude hiding (Monad(..))
 import Foreign.Ptr (Ptr)
 import Foreign.C.Types
-import System.IO.Unsafe
+import Control.Concurrent (threadDelay)
 
 example = do
     input <- readCell @"in"
@@ -30,3 +30,10 @@ example3 = do
 example4 = do
     input <- readCell @"out" @CInt
     unsafeMemoryIO $ putStrLn "example4"
+
+example5 = do
+    unsafeMemoryIO $ threadDelay 10
+    input <- readCell @"in2"
+    let output = input + 2 :: CInt
+    unsafeMemoryIO $ putStrLn "example5"
+    writeCell @"out2" output

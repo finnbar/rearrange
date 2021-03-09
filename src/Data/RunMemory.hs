@@ -1,6 +1,9 @@
 {-# LANGUAGE FlexibleInstances, FlexibleContexts, UndecidableInstances, ScopedTypeVariables #-}
 
-module Data.RunMemory where
+module Data.RunMemory (
+    runMem, RunMems(..),
+    RunPartialMems(..)
+) where
 
 import Data.Memory (Memory(..), TupleUnion)
 import Data.MemoryAddr (MAddr(..), MAddrUpdate(..))
