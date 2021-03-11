@@ -1,4 +1,4 @@
-{-# LANGUAGE UndecidableInstances, FlexibleInstances, ScopedTypeVariables #-}
+{-# LANGUAGE UndecidableInstances, FlexibleInstances, ScopedTypeVariables, FunctionalDependencies #-}
 
 module Data.Type.HList (
     HList(..),
@@ -36,7 +36,7 @@ hCombine (x :+: xs) ys = x :+: hCombine xs ys
 -- GetHListElem, which finds an element of the type and returns the list
 -- without that type.
 
-class GetHListElem x inp out where
+class GetHListElem x inp out | x inp -> out where
     getHListElem :: HList inp -> (x, HList out)
 
 instance {-# OVERLAPPING #-} GetHListElem x (x ': xs) xs where
@@ -79,7 +79,7 @@ instance RearrangementError => RearrangeList '[] (y ': ys) where
 instance RearrangementError => RearrangeList (x ': xs) '[] where
     rearrange _ = error "unreachable"
 
-instance (old' ~ Remove n old, GetHListElem n old old', RearrangeList old' ns)
+instance (GetHListElem n old old', RearrangeList old' ns)
     => RearrangeList old (n ': ns) where
         rearrange l = elem :+: rearrange l'
             where (elem, l') = getHListElem l :: (n, HList old')
