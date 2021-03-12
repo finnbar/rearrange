@@ -91,30 +91,16 @@ type family TypeLen (list :: [*]) :: Nat where
     TypeLen (HList x ': xs) = TypeLen x + TypeLen xs
     TypeLen (x ': xs) = 1 + TypeLen xs
 
-type family FirstN (ty :: [*]) (n :: Nat) :: [*] where
-    FirstN x 0 = '[]
-    FirstN (x ': xs) n = x ': FirstN xs (n - 1)
+class SubHList old (n :: Nat) newl newr | old n -> newl newr where
+    subHList :: HList old -> Proxy n -> (HList newl, HList newr)
 
-type FirstNSucc x xs n = FirstN (x ': xs) n ~ (x ': FirstN xs (n-1))
+instance {-# OVERLAPPING #-} SubHList xs 0 '[] xs where
+    subHList list _ = (HNil, list)
 
-type family AfterN (ty :: [*]) (n :: Nat) :: [*] where
-    AfterN x 0 = x
-    AfterN (x ': xs) n = AfterN xs (n-1)
-
-type AfterNSucc x xs n = AfterN (x ': xs) n ~ AfterN xs (n-1)
-
-class SubHList old (n :: Nat) where
-    subHList :: HList old -> Proxy n -> (HList (FirstN old n), HList (AfterN old n))
-    
-instance {-# OVERLAPPING #-} SubHList old 0 where
-    subHList xs _ = (HNil, xs)
-
--- FirstNSucc, AfterNSucc needed because we can guarantee that n > 0, but the
--- type checker cannot and thus can't perform the expansion ...NSucc does.
-instance (old ~ (x ': xs), SubHList xs (n-1), FirstNSucc x xs n, AfterNSucc x xs n)
-    => SubHList old n where
-    subHList (o :+: os) _ = (o :+: before, after)
-        where (before, after) = subHList os (Proxy :: Proxy (n-1))
+instance (SubHList xs (n-1) ys newr, newl ~ (x ': ys), old ~ (x ': xs))
+    => SubHList old n newl newr where
+    subHList (o :+: os) prox = (o :+: left, right)
+        where (left, right) = subHList os (Proxy :: Proxy (n-1))
 
 -- RestructureList, which takes a flat HList and reshapes it.
 
@@ -124,8 +110,8 @@ class RestructureList old new where
 instance RestructureList '[] '[] where
     restructure _ = HNil
 
-instance (len ~ TypeLen xs, RestructureList (FirstN old len) xs,
-    RestructureList (AfterN old len) xss, SubHList old len)
+instance (len ~ TypeLen xs, RestructureList newl xs,
+    RestructureList newr xss, SubHList old len newl newr)
     => RestructureList old (HList xs ': xss) where
     restructure list = restructure thisList :+: restructure rest
         where (thisList, rest) = subHList list (Proxy :: Proxy len)
