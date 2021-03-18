@@ -14,7 +14,6 @@ import Data.Type.TSort (Topsort)
 import Fcf
 
 -- To break into connected components, simply UndirectedDFS to find it.
--- TODO: A lot of this code is repeated from SCC finding.
 
 data Componentise :: Comp -> [*] -> Exp [[*]]
 type instance Eval (Componentise comp types) =
@@ -22,14 +21,8 @@ type instance Eval (Componentise comp types) =
 
 data RunComponentise :: AdjacencyList -> Exp [[*]]
 type instance Eval (RunComponentise adj) =
-    Eval (Fst =<< Foldl (AddToCC adj) EmptyAcc' (Eval (Nodes adj)))
+    Eval (ConnectedComponents adj (Eval (Nodes adj)))
 
--- Call UndirectedDFS(node), and collect all of its results into a CC.
-data AddToCC :: AdjacencyList -> Acc' -> * -> Exp Acc'
-type instance Eval (AddToCC adj '(ccs, used) node) =
-    Eval (AddIfNonEmpty '(ccs, used) =<< UndirectedDFS adj node '( '[], used))
-
-type UndirectedDFS = DFS GetEdges
 type Components xs = Eval (Componentise IsLessThan xs)
 
 toComponents :: (NoDuplicates xs, TransformList xs xs',
