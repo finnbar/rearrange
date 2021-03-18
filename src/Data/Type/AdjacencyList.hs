@@ -27,9 +27,9 @@ type instance Eval (GetOutEdges adj x) = Eval (Fst =<< UnsafeLookup adj x)
 data GetEdges :: AdjacencyList -> * -> Exp [*]
 type instance Eval (GetEdges adj x) = Eval (CombinePair =<< UnsafeLookup adj x)
 
-data Keys :: [Mapping k v] -> Exp [k]
-type instance Eval (Keys '[]) = '[]
-type instance Eval (Keys ((k :-> v) ': xs)) = k ': Eval (Keys xs)
+data Nodes :: [Mapping k v] -> Exp [k]
+type instance Eval (Nodes '[]) = '[]
+type instance Eval (Nodes ((k :-> v) ': xs)) = k ': Eval (Nodes xs)
 
 data ToAdjacencyList :: Comp -> [*] -> Exp AdjacencyList
 type instance Eval (ToAdjacencyList comp nodes) =

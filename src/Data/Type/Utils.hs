@@ -5,7 +5,6 @@ module Data.Type.Utils where
 import Data.Type.Set (MemberP)
 import GHC.TypeLits
 import Data.Kind
-import Data.Proxy
 
 import Fcf (Exp, Eval)
 

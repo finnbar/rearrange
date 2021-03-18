@@ -7,7 +7,6 @@ module Data.RunMemory (
 
 import Data.Memory (Memory(..), TupleUnion)
 import Data.MemoryAddr (MAddr(..), MAddrUpdate(..))
-import Data.Type.Utils
 
 import Data.Type.HList
 import Data.Type.Set hiding (Proxy)
