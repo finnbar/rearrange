@@ -36,7 +36,7 @@ instance Effect Memory where
     return x = Mem $ \Empty -> P.return x
     (Mem e) >>= k =
         Mem $ \fg -> let (f, g) = split fg
-                      in e f P.>>= ((\fn -> fn g) . runMemory . k)
+                      in e f P.>>= \x -> (runMemory . k) x g
 
 unsafeMemoryIO :: IO a -> Memory '( '[], '[]) a
 unsafeMemoryIO act = Mem $ \Empty -> act

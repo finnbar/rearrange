@@ -10,7 +10,7 @@ module Data.Type.HList (
     FlattenToHList
     ) where
 
-import Data.Type.Utils (Remove, Combine)
+import Data.Type.Utils (Combine)
 import GHC.TypeLits
 import Data.Kind
 import Data.Proxy
@@ -42,7 +42,7 @@ class GetHListElem x inp out | x inp -> out where
 instance {-# OVERLAPPING #-} GetHListElem x (x ': xs) xs where
     getHListElem (x :+: xs) = (x, xs)
 
-instance (out ~ (o ': out'), GetHListElem x inp' out')
+instance (GetHListElem x inp' out', out ~ (o ': out'))
     => GetHListElem x (o ': inp') out where
         getHListElem (y :+: xs) = (res, y :+: rest)
             where (res, rest) = getHListElem xs
@@ -82,9 +82,9 @@ instance RearrangementError => RearrangeList (x ': xs) '[] where
 instance (GetHListElem n old old', RearrangeList old' ns)
     => RearrangeList old (n ': ns) where
         rearrange l = elem :+: rearrange l'
-            where (elem, l') = getHListElem l :: (n, HList old')
+            where (elem, l') = getHListElem l
 
--- SubHList, which gets the first n elements of a HList at type level.
+-- SubHList, which gets the first n elements of a HList.
 
 type family TypeLen (list :: [*]) :: Nat where
     TypeLen '[] = 0
@@ -97,9 +97,9 @@ class SubHList old (n :: Nat) newl newr | old n -> newl newr where
 instance {-# OVERLAPPING #-} SubHList xs 0 '[] xs where
     subHList list _ = (HNil, list)
 
-instance (SubHList xs (n-1) ys newr, newl ~ (x ': ys), old ~ (x ': xs))
+instance (SubHList old' (n-1) newl' newr, newl ~ (x ': newl'), old ~ (x ': old'))
     => SubHList old n newl newr where
-    subHList (o :+: os) prox = (o :+: left, right)
+    subHList (o :+: os) _ = (o :+: left, right)
         where (left, right) = subHList os (Proxy :: Proxy (n-1))
 
 -- RestructureList, which takes a flat HList and reshapes it.
@@ -110,8 +110,10 @@ class RestructureList old new where
 instance RestructureList '[] '[] where
     restructure _ = HNil
 
-instance (len ~ TypeLen xs, RestructureList newl xs,
-    RestructureList newr xss, SubHList old len newl newr)
+instance (len ~ TypeLen xs,
+    RestructureList newl xs,
+    RestructureList newr xss,
+    SubHList old len newl newr)
     => RestructureList old (HList xs ': xss) where
     restructure list = restructure thisList :+: restructure rest
         where (thisList, rest) = subHList list (Proxy :: Proxy len)

@@ -7,7 +7,7 @@ module Data.Type.ComponentSearch (
 import Data.Type.AdjacencyList
 import Data.Type.Dependencies (IsLessThan)
 import Data.Type.HList (HList, TransformList(..), FlattenToHList)
-import Data.Type.Utils (Append, Contains, Foldl, NoDuplicates)
+import Data.Type.Utils (Contains, Foldl, NoDuplicates)
 import Data.Type.TSort (Topsort)
 
 import Fcf
