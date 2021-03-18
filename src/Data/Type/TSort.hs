@@ -11,6 +11,11 @@ import Data.Type.HList (HList, RearrangeList(..))
 import Fcf
 import GHC.TypeLits
 
+-- TODO: might want to see if topsort + SCC search can be merged
+-- in GraphUtils, as to guarantee no weirdness.
+-- Then this file might not even be necessary.
+-- Also, clean up imports.
+
 -- https://stackoverflow.com/questions/59965812/topological-sort-based-on-a-comparator-rather-than-a-graph
 -- step 3 of https://en.wikipedia.org/wiki/Kosaraju%27s_algorithm
 

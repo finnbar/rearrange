@@ -17,7 +17,7 @@ import Fcf
 
 data Componentise :: Comp -> [*] -> Exp [[*]]
 type instance Eval (Componentise comp types) =
-        Eval (RunComponentise =<< ToAdjacencyList comp types)
+    Eval (RunComponentise =<< ToAdjacencyList comp types)
 
 data RunComponentise :: AdjacencyList -> Exp [[*]]
 type instance Eval (RunComponentise adj) =

@@ -41,7 +41,7 @@ data GetComponents :: SearchFn -> AdjacencyList -> [*] -> Exp [[*]]
 type instance Eval (GetComponents search adj nodes) =
     Eval (Fst =<< Foldl (AddToComponent search adj) EmptyAcc' nodes)
 
--- Call Assign(node), and collect all of its results into an SCC.
+-- Search the rest of the graph using `search`, and collect all of its results into an SCC.
 data AddToComponent :: SearchFn -> AdjacencyList -> Acc' -> * -> Exp Acc'
 type instance Eval (AddToComponent search adj '(sccs, used) node) =
     Eval (AddIfNonEmpty '(sccs, used) =<< DFS search adj node '( '[], used))
