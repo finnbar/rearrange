@@ -9,7 +9,7 @@ import Data.Type.GraphUtils (ConnectedComponents)
 import Data.Type.Dependencies (IsLessThan)
 import Data.Type.HList (HList, TransformList(..), FlattenToHList)
 import Data.Type.Utils (Contains, Foldl, NoDuplicates)
-import Data.Type.TSort (Topsort)
+import Data.Type.TSort (Ordered)
 
 import Fcf
 
@@ -30,7 +30,7 @@ toComponents :: (NoDuplicates xs, TransformList xs xs',
     HList xs -> HList xs'
 toComponents = transform
 
-type MultiTopSort xs = Eval (Map (Topsort IsLessThan) xs)
+type MultiTopSort xs = Eval (Map (Ordered IsLessThan) xs)
 
 toSortedComponents :: (NoDuplicates xs, TransformList xs xs'',
     xs' ~ Components xs, xs'' ~ FlattenToHList (MultiTopSort xs')) =>
