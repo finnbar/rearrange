@@ -14,6 +14,8 @@ type EmptyAcc' = '( '[], '[])
 
 type SearchFn = AdjacencyList -> * -> Exp [*]
 
+-- A nice example of a stack-based DFS can be found here:
+-- https://stackoverflow.com/questions/59965812/topological-sort-based-on-a-comparator-rather-than-a-graph
 data DFS :: SearchFn -> AdjacencyList -> * -> Acc -> Exp Acc
 type instance Eval (DFS search adj node '(stack, used)) =
     Eval (UnBool
@@ -28,7 +30,7 @@ data UpdateStack :: * -> Acc -> Exp Acc
 type instance Eval (UpdateStack node '(stack, used)) =
     '(node ': stack, used)
 
--- We must Append rather than (':) as to preserve topological ordering.
+-- We must Append rather than (':) as to preserve input ordering.
 data AddIfNonEmpty :: Acc' -> Acc -> Exp Acc'
 type instance Eval (AddIfNonEmpty '(xs, u) '(x, u')) =
     If (Eval (Null x))
@@ -46,5 +48,5 @@ data AddToComponent :: SearchFn -> AdjacencyList -> Acc' -> * -> Exp Acc'
 type instance Eval (AddToComponent search adj '(sccs, used) node) =
     Eval (AddIfNonEmpty '(sccs, used) =<< DFS search adj node '( '[], used))
 
-type StrongConnectedComponents = GetComponents GetInEdges
+type SCCsFromTopsorted = GetComponents GetInEdges
 type ConnectedComponents = GetComponents GetEdges

@@ -5,7 +5,7 @@ module Data.Type.ComponentSearch (
 ) where
 
 import Data.Type.AdjacencyList
-import Data.Type.GraphUtils
+import Data.Type.GraphUtils (ConnectedComponents)
 import Data.Type.Dependencies (IsLessThan)
 import Data.Type.HList (HList, TransformList(..), FlattenToHList)
 import Data.Type.Utils (Contains, Foldl, NoDuplicates)
@@ -13,7 +13,7 @@ import Data.Type.TSort (Topsort)
 
 import Fcf
 
--- To break into connected components, simply UndirectedDFS to find it.
+-- To break into connected components, simply do DFS on the undirected version.
 
 data Componentise :: Comp -> [*] -> Exp [[*]]
 type instance Eval (Componentise comp types) =

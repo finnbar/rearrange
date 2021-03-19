@@ -2,8 +2,8 @@
 
 module Data.Type.TSort where
 
-import Data.Type.Utils (Foldl, NoDuplicates)
-import Data.Type.GraphUtils
+import Data.Type.Utils (NoDuplicates)
+import Data.Type.GraphUtils (DFS, EmptyAcc, SCCsFromTopsorted)
 import Data.Type.AdjacencyList
 import Data.Type.Dependencies (IsLessThan)
 import Data.Type.HList (HList, RearrangeList(..))
@@ -11,16 +11,11 @@ import Data.Type.HList (HList, RearrangeList(..))
 import Fcf
 import GHC.TypeLits
 
--- TODO: might want to see if topsort + SCC search can be merged
--- in GraphUtils, as to guarantee no weirdness.
--- Then this file might not even be necessary.
--- Also, clean up imports.
+-- We perform Kosaraju's algorithm (https://en.wikipedia.org/wiki/Kosaraju%27s_algorithm)
+-- which does a topsort and then finds strongly connected components.
+-- Since we want no loops (so that the topological sort is valid), we error if
+-- any SCC has size larger than one.
 
--- https://stackoverflow.com/questions/59965812/topological-sort-based-on-a-comparator-rather-than-a-graph
--- step 3 of https://en.wikipedia.org/wiki/Kosaraju%27s_algorithm
-
--- Kosaraju's algorithm is just a topological sort followed by loop finding.
--- We loop find by looking for Strongly Connected Components that are larger than one node.
 data Topsort :: Comp -> [*] -> Exp [*]
 type instance Eval (Topsort comp types) =
         Eval (RunTopsort =<< ToAdjacencyList comp types)
@@ -28,7 +23,7 @@ type instance Eval (Topsort comp types) =
 data RunTopsort :: AdjacencyList -> Exp [*]
 type instance Eval (RunTopsort adj) =
     Eval (FlattenSingletons
-        =<< StrongConnectedComponents adj
+        =<< SCCsFromTopsorted adj
         =<< DoTopsort adj)
 
 -- Loop through the nodes, doing a DFS on all unused. Then return the stack.
