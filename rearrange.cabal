@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 0eb4a0705ab7a969423461bf0e40e113f748495b0e421386ee5da9f9e9366777
+-- hash: 345773a1c8071379809f68f64845bebfb217321173be50d386d7b57e2871ae45
 
 name:           rearrange
 version:        0.1.0.0
@@ -52,6 +52,7 @@ library
       base >=4.7 && <5
     , effect-monad
     , first-class-families
+    , monad-var
     , type-level-sets
   default-language: Haskell2010
 
@@ -67,6 +68,7 @@ executable rearrange-exe
       base >=4.7 && <5
     , effect-monad
     , first-class-families
+    , monad-var
     , rearrange
     , type-level-sets
   default-language: Haskell2010
@@ -83,6 +85,7 @@ test-suite rearrange-test
       base >=4.7 && <5
     , effect-monad
     , first-class-families
+    , monad-var
     , rearrange
     , type-level-sets
   default-language: Haskell2010

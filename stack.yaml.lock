@@ -29,6 +29,13 @@ packages:
       sha256: 4e429aabcbb36ac9aca318b53bc8eaf36de527b42bf89e5e32d551615178957c
   original:
     hackage: first-class-families-0.8.0.0
+- completed:
+    hackage: monad-var-0.2.2.0@sha256:676a99b61173859c9bba1093f3779832a29f6d3eed9a74dbb0e190f10874717f,2186
+    pantry-tree:
+      size: 902
+      sha256: b8887d397ac332ef7a35e404917724ef985ee1c3699895e1e7717cd94f35019b
+  original:
+    hackage: monad-var-0.2.2.0
 snapshots:
 - completed:
     size: 563098

@@ -24,6 +24,7 @@ dependencies:
 - type-level-sets
 - effect-monad
 - first-class-families
+- monad-var
 
 library:
   source-dirs: src

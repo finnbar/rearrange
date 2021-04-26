@@ -25,14 +25,14 @@ type instance Eval (RunComponentise adj) =
 
 type Components xs = Eval (Componentise IsLessThan xs)
 
-toComponents :: (NoDuplicates xs, TransformList xs xs',
+toComponents :: (TransformList xs xs',
     xs' ~ FlattenToHList (Components xs)) =>
     HList xs -> HList xs'
 toComponents = transform
 
 type MultiTopSort xs = Eval (Map (Ordered IsLessThan) xs)
 
-toSortedComponents :: (NoDuplicates xs, TransformList xs xs'',
+toSortedComponents :: (TransformList xs xs'',
     xs' ~ Components xs, xs'' ~ FlattenToHList (MultiTopSort xs')) =>
     HList xs -> HList xs''
 toSortedComponents = transform

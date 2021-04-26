@@ -12,6 +12,7 @@ import Data.Type.Utils (NonEmptyIntersect)
 import GHC.TypeLits
 import Fcf
 
+-- Why are we not using something from Prelude?
 data PartialOrder = DLT | DGT | NOT
 
 data IsLessThan :: * -> * -> Exp Bool

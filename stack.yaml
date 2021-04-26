@@ -45,6 +45,7 @@ extra-deps:
 - git: https://github.com/nilp0inter/effect-monad.git
   commit: 81fb4540d9da222651d5159239569e5b665c09fb
 - first-class-families-0.8.0.0
+- monad-var-0.2.2.0
 
 # Override default flag values for local packages and extra-deps
 # flags: {}

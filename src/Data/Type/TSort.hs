@@ -27,6 +27,8 @@ type instance Eval (RunTopsort adj) =
         =<< SCCsFromTopsorted adj
         =<< DoTopsort adj)
 
+-- TODO: this check doesn't actually work.
+-- It catches situations where a later computation merges two previous results.
 data NoOutputDependence :: AdjacencyList -> Exp AdjacencyList
 type instance Eval (NoOutputDependence adj) =
     Eval (Foldr CheckInDegree adj (Eval (Nodes adj)))
@@ -60,6 +62,6 @@ type family FLS (xss :: [[*]]) :: [*] where
             Text "Their execution cannot be ordered." :$$:
             Text "To allow compilation, break the loop somehow.")
 
-ordered :: (NoDuplicates xs, RearrangeList xs xs', xs' ~ Eval (Ordered IsLessThan xs)) =>
+ordered :: (RearrangeList xs xs', xs' ~ Eval (Ordered IsLessThan xs)) =>
     HList xs -> HList xs'
 ordered = rearrange

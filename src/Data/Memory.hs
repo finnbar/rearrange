@@ -17,7 +17,8 @@ import Data.Kind (Constraint)
 -- For this version, we pretend that updates do not exist, and explicitly disallow them.
 -- Future versions may lift this restriction.
 
-newtype Memory (s :: ([*], [*])) a = Mem { runMemory :: Set (TupleUnion s) -> IO a }
+newtype Memory (s :: ([*], [*])) a =
+    Mem { runMemory :: Set (TupleUnion s) -> IO a }
 
 type family TupleUnion (s :: ([*], [*])) :: [*] where
     TupleUnion '(rs, ws) = Union rs ws
@@ -29,7 +30,8 @@ type family IsTupleSet (x :: ([*], [*])) :: Constraint where
     IsTupleSet '(s, t) = (IsSet s, IsSet t)
 
 instance Effect Memory where
-    type Inv Memory f g = (IsTupleSet f, IsTupleSet g, Split (TupleUnion f) (TupleUnion g) (TupleUnion (TuplePlus f g)))
+    type Inv Memory f g = (IsTupleSet f, IsTupleSet g,
+        Split (TupleUnion f) (TupleUnion g) (TupleUnion (TuplePlus f g)))
     type Unit Memory = '( '[], '[] )
     type Plus Memory f g = TuplePlus f g
 
