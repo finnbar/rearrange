@@ -1,4 +1,5 @@
-{-# LANGUAGE FlexibleInstances, FlexibleContexts, UndecidableInstances, ScopedTypeVariables #-}
+{-# LANGUAGE FlexibleInstances, FlexibleContexts, UndecidableInstances,
+    ScopedTypeVariables, FunctionalDependencies #-}
 
 module Data.RunMemory (
     runMem, RunMems(..),
@@ -15,21 +16,17 @@ import Data.Proxy
 
 -- FULL UPDATE (run all memory functions)
 
-runMem :: Subset (TupleUnion s) env => Memory s b -> Set env -> IO b
+runMem :: Subset (TupleUnion s) env => Memory m s b -> Set env -> m b
 runMem mem env = runMemory mem (subset env)
 
-type family MemoryReturn (xs :: [*]) :: [*] where
-    MemoryReturn '[] = '[]
-    MemoryReturn (Memory s b ': xs) = b ': MemoryReturn xs
+class RunMems m xs env out | xs env -> out where
+    runMems :: HList xs -> Set env -> m (HList out)
 
-class RunMems xs env where
-    runMems :: HList xs -> Set env -> IO (HList (MemoryReturn xs))
-
-instance RunMems '[] env where
+instance Monad m => RunMems m '[] env '[] where
     runMems _ _ = return HNil
 
-instance (RunMems xs env, Subset (TupleUnion s) env) =>
-    RunMems (Memory s b ': xs) env where
+instance (Monad m, RunMems m xs env out, Subset (TupleUnion s) env) =>
+    RunMems m (Memory m s b ': xs) env (b ': out) where
         runMems (mem :+: mems) env = do
             r <- runMem mem env
             rs <- runMems mems env
@@ -37,14 +34,15 @@ instance (RunMems xs env, Subset (TupleUnion s) env) =>
 
 -- PARTIAL UPDATE (run memory functions only if the proxy input dictates it)
 
-class RunPartialMems xs env where
-    runPartialMems :: HList xs -> Set env -> [MAddrUpdate] -> IO () -> IO ()
+class RunPartialMems m xs env where
+    runPartialMems :: HList xs -> Set env -> [MAddrUpdate] -> m () -> m ()
 
-instance RunPartialMems '[] env where
+instance RunPartialMems m '[] env where
     runPartialMems HNil _ _ finaliser = finaliser
 
-instance (RunPartialMems xs env, RequiresUpdate rs, UpdateEffects ws, Subset (Union rs ws) env)
-    => RunPartialMems (Memory '(rs, ws) c ': xs) env where
+instance (Monad m, RunPartialMems m xs env, RequiresUpdate rs,
+    UpdateEffects ws, Subset (Union rs ws) env)
+    => RunPartialMems m (Memory m '(rs, ws) c ': xs) env where
         runPartialMems (mem :+: mems) env partial fin =
             if any (requiresUpdate (Proxy :: Proxy rs)) partial
             then do
@@ -58,7 +56,7 @@ class RequiresUpdate rs where
 instance RequiresUpdate '[] where
     requiresUpdate _ _ = False
 
-instance (KnownSymbol s, RequiresUpdate xs) => RequiresUpdate (MAddr s t ': xs) where
+instance (KnownSymbol s, RequiresUpdate xs) => RequiresUpdate (MAddr v s t ': xs) where
     requiresUpdate Proxy a@(AddrUpdate st) = symbolVal (Proxy :: Proxy s) == st || requiresUpdate (Proxy :: Proxy xs) a
 
 class UpdateEffects ws where
@@ -67,5 +65,5 @@ class UpdateEffects ws where
 instance UpdateEffects '[] where
     updateEffects Proxy tail = tail
 
-instance (KnownSymbol s, UpdateEffects xs) => UpdateEffects (MAddr s t ': xs) where
+instance (KnownSymbol s, UpdateEffects xs) => UpdateEffects (MAddr v s t ': xs) where
     updateEffects Proxy tail = AddrUpdate (symbolVal (Proxy :: Proxy s)) : updateEffects (Proxy :: Proxy xs) tail

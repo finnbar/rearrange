@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 345773a1c8071379809f68f64845bebfb217321173be50d386d7b57e2871ae45
+-- hash: 4edc30c8fa38bde6bc826fd19e35447c4ae63953cce913d32db629140d4f606b
 
 name:           rearrange
 version:        0.1.0.0
@@ -38,6 +38,7 @@ library
       Data.Type.HList
       Data.Type.TSort
       Data.Type.Utils
+      MonadRW
       Rearrange
       Testing
       ToAddrs

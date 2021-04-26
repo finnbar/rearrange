@@ -1,12 +1,12 @@
 module Rearrange (
-    readCell, writeCell, unsafeMemoryIO,
+    readCell, writeCell, memoryIO, unsafeMemoryIO,
     Memory(..), MAddr(..), updated, updatedInEnv,
     runMem, runMems, RunPartialMems(..),
     runMultiMems, runMultiPartialMems,
     toAddr, ToSet(..), distribute, HList(..),
     Effect(..), ordered, toSortedComponents) where
 
-import Data.Memory (Memory(..), unsafeMemoryIO)
+import Data.Memory (Memory(..), memoryIO, unsafeMemoryIO)
 import Data.MemoryAddr (readCell, writeCell, MAddr(..), updated, updatedInEnv)
 import Data.RunMemory (runMem, runMems, RunPartialMems(..))
 import Data.RunMemoryConc (runMultiMems, runMultiPartialMems)

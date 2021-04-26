@@ -25,7 +25,8 @@ class RunMultiMems xs env where
 instance RunMultiMems '[] c where
     rmm mvars HNil _ = waitForAll mvars $ return ()
 
-instance (RunMems t env, RunMultiMems ts env) => RunMultiMems (HList t ': ts) env where
+instance (RunMems IO t env out, RunMultiMems ts env)
+    => RunMultiMems (HList t ': ts) env where
     rmm mvars (x :+: xs) env = do
         mvar <- newEmptyMVar
         forkFinally (runMems x env) $ \_ -> putMVar mvar ()
@@ -33,7 +34,8 @@ instance (RunMems t env, RunMultiMems ts env) => RunMultiMems (HList t ': ts) en
 
 -- PARTIAL MULTIPROCESS UPDATE WITH TRUE FINALISER
 
-runMultiPartialMems :: RunMultiPartialMems xs env => HList xs -> Set env -> [MAddrUpdate] -> IO () -> IO ()
+runMultiPartialMems :: RunMultiPartialMems xs env =>
+    HList xs -> Set env -> [MAddrUpdate] -> IO () -> IO ()
 runMultiPartialMems = rmpm []
 
 class RunMultiPartialMems xs env where
@@ -42,7 +44,7 @@ class RunMultiPartialMems xs env where
 instance RunMultiPartialMems '[] env where
     rmpm mvars HNil _ _ finaliser = waitForAll mvars finaliser
 
-instance (RunPartialMems t env, RunMultiPartialMems ts env) =>
+instance (RunPartialMems IO t env, RunMultiPartialMems ts env) =>
     RunMultiPartialMems (HList t ': ts) env where
     rmpm mvars (x :+: xs) env upd fin = do
         mvar <- newEmptyMVar
