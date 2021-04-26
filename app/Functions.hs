@@ -18,6 +18,11 @@ import Control.Concurrent (threadDelay)
 -- takes. We'd need some way to remove the ambiguity check _and_ make clear
 -- via the call site of runMems or whatever exactly what types each value has.
 -- This is mainly achieved via this unique mapping, I think.
+-- If that doesn't work, just create type-specific versions of readCell for
+-- clear and easy use.
+-- Or some kind of open type family and you select the type? (Thus
+-- constraining the monad, or the container type, or both.)
+-- Constraint to IO might help?
 
 example = do
     input <- readCell @"in" @Ptr

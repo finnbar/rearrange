@@ -19,6 +19,12 @@ import System.IO.Unsafe (unsafePerformIO)
 -- For this version, we pretend that updates do not exist, and explicitly disallow them.
 -- Future versions may lift this restriction.
 
+-- TO CONSIDER: These are the definitions in effect-monad:
+-- Union s t = Nub (Sort (s :++ t))
+-- IsSet s = s ~ Nub (Sort s)
+-- Could write my own Nub and Nubable to allow for custom merging.
+-- (e.g. for Cell v s t, s identifies unique (v,t).)
+
 newtype Memory (m :: * -> *) (s :: ([*], [*])) a =
     Mem { runMemory :: Set (TupleUnion s) -> m a }
 

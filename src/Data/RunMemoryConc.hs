@@ -7,7 +7,7 @@ module Data.RunMemoryConc (
 
 import Data.Type.HList
 import Data.RunMemory
-import Data.MemoryAddr (MAddrUpdate(..))
+import Data.MemoryCell (CellUpdate(..))
 
 import Data.Type.Set hiding (Proxy)
 import Control.Concurrent (forkFinally)
@@ -35,11 +35,11 @@ instance (RunMems IO t env out, RunMultiMems ts env)
 -- PARTIAL MULTIPROCESS UPDATE WITH TRUE FINALISER
 
 runMultiPartialMems :: RunMultiPartialMems xs env =>
-    HList xs -> Set env -> [MAddrUpdate] -> IO () -> IO ()
+    HList xs -> Set env -> [CellUpdate] -> IO () -> IO ()
 runMultiPartialMems = rmpm []
 
 class RunMultiPartialMems xs env where
-    rmpm :: [MVar ()] -> HList xs -> Set env -> [MAddrUpdate] -> IO () -> IO ()
+    rmpm :: [MVar ()] -> HList xs -> Set env -> [CellUpdate] -> IO () -> IO ()
 
 instance RunMultiPartialMems '[] env where
     rmpm mvars HNil _ _ finaliser = waitForAll mvars finaliser

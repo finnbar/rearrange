@@ -7,7 +7,7 @@ module Data.RunMemory (
 ) where
 
 import Data.Memory (Memory(..), TupleUnion)
-import Data.MemoryAddr (MAddr(..), MAddrUpdate(..))
+import Data.MemoryCell (Cell(..), CellUpdate(..))
 
 import Data.Type.HList
 import Data.Type.Set hiding (Proxy)
@@ -35,7 +35,7 @@ instance (Monad m, RunMems m xs env out, Subset (TupleUnion s) env) =>
 -- PARTIAL UPDATE (run memory functions only if the proxy input dictates it)
 
 class RunPartialMems m xs env where
-    runPartialMems :: HList xs -> Set env -> [MAddrUpdate] -> m () -> m ()
+    runPartialMems :: HList xs -> Set env -> [CellUpdate] -> m () -> m ()
 
 instance RunPartialMems m '[] env where
     runPartialMems HNil _ _ finaliser = finaliser
@@ -51,19 +51,19 @@ instance (Monad m, RunPartialMems m xs env, RequiresUpdate rs,
             else runPartialMems mems env partial fin
 
 class RequiresUpdate rs where
-    requiresUpdate :: Proxy rs -> MAddrUpdate -> Bool
+    requiresUpdate :: Proxy rs -> CellUpdate -> Bool
 
 instance RequiresUpdate '[] where
     requiresUpdate _ _ = False
 
-instance (KnownSymbol s, RequiresUpdate xs) => RequiresUpdate (MAddr v s t ': xs) where
+instance (KnownSymbol s, RequiresUpdate xs) => RequiresUpdate (Cell v s t ': xs) where
     requiresUpdate Proxy a@(AddrUpdate st) = symbolVal (Proxy :: Proxy s) == st || requiresUpdate (Proxy :: Proxy xs) a
 
 class UpdateEffects ws where
-    updateEffects :: Proxy ws -> [MAddrUpdate] -> [MAddrUpdate]
+    updateEffects :: Proxy ws -> [CellUpdate] -> [CellUpdate]
 
 instance UpdateEffects '[] where
     updateEffects Proxy tail = tail
 
-instance (KnownSymbol s, UpdateEffects xs) => UpdateEffects (MAddr v s t ': xs) where
+instance (KnownSymbol s, UpdateEffects xs) => UpdateEffects (Cell v s t ': xs) where
     updateEffects Proxy tail = AddrUpdate (symbolVal (Proxy :: Proxy s)) : updateEffects (Proxy :: Proxy xs) tail

@@ -1,19 +1,19 @@
 {-# LANGUAGE FlexibleInstances, RankNTypes, ScopedTypeVariables #-}
 
-module ToAddrs where
+module ToCells where
 
 import MonadRW
 
-import Data.MemoryAddr
+import Data.MemoryCell
 import Data.Type.HList
 import Data.Type.Set
 import Foreign.Storable
 import Foreign.Ptr
 import GHC.TypeLits (Symbol)
 
-toAddr :: forall (s :: Symbol) t m v c. (Monad m, MonadRW m v c, c t)
-    => m (v t) -> m (MAddr v s t)
-toAddr action = action >>= \ptr -> return (Addr @s @t @m ptr)
+toCell :: forall (s :: Symbol) t m v c. (Monad m, MonadRW m v c, c t)
+    => m (v t) -> m (Cell v s t)
+toCell action = action >>= \ptr -> return (Cell @s @t @m ptr)
 
 class ToSet xs where
     toSet :: HList xs -> Set xs

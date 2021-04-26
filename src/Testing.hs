@@ -2,8 +2,8 @@ module Testing where
 
 import Data.Type.TSort
 import Data.Type.ComponentSearch
-import Data.MemoryAddr
 import Data.Memory
+import Data.MemoryCell
 import Data.Type.HList
 import Data.Type.Dependencies
 import Data.Type.AdjacencyList
