@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 315e64da83d10bbc357de06c2dae0dce6be98cb17328d6271935bb81bb730d71
+-- hash: 0f5231ce28609efbe6dbf56f19a21a099f656d2a1ec024fa79e5c29fd35bf8ac
 
 name:           rearrange
 version:        0.1.0.0
@@ -27,10 +27,12 @@ source-repository head
 
 library
   exposed-modules:
-      Data.Memory
-      Data.MemoryCell
-      Data.RunMemory
-      Data.RunMemoryConc
+      Data.Memory.Memory
+      Data.Memory.MemoryCell
+      Data.Memory.RunMemory
+      Data.Memory.RunMemoryConc
+      Data.Memory.ToCells
+      Data.Memory.Types
       Data.Type.AdjacencyList
       Data.Type.ComponentSearch
       Data.Type.Dependencies
@@ -41,7 +43,6 @@ library
       MonadRW
       Rearrange
       Testing
-      ToCells
   other-modules:
       Paths_rearrange
   hs-source-dirs:

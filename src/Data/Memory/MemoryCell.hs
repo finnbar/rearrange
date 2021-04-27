@@ -2,25 +2,19 @@
     ScopedTypeVariables, AllowAmbiguousTypes, FunctionalDependencies,
     FlexibleContexts #-}
 
-module Data.MemoryCell (
+module Data.Memory.MemoryCell (
     readCell, writeCell,
     Cell(..), CellUpdate(..),
     updated, updatedInEnv
     ) where
 
-import Data.Memory (Memory(Mem))
+import Data.Memory.Types (Memory(..), Cell(..), CellUpdate(..), Set(..))
 import MonadRW
 
 import Foreign.Storable (Storable(poke, peek))
 import Foreign.Ptr (Ptr)
 import GHC.TypeLits
 import Data.Proxy
-import Data.Type.Set (Cmp, Set(Empty, Ext))
-
-data Cell (v :: * -> *) (s :: Symbol) t where
-    Cell :: forall s t m v c. (Monad m, MonadRW m v c, c t) => v t -> Cell v s t
-
-type instance Cmp (Cell v s t) (Cell v' s' t') = CmpSymbol s s'
 
 readCell :: forall s v t m c. (MonadRW m v c, c t) =>
     Memory m '( '[Cell v s t], '[] ) t
@@ -29,8 +23,6 @@ readCell = Mem $ \(Ext (Cell pt) Empty) -> readVar pt
 writeCell :: forall s v t m c. (MonadRW m v c, c t) =>
     t -> Memory m '( '[], '[Cell v s t] ) ()
 writeCell x = Mem $ \(Ext (Cell pt) Empty) -> writeVar pt x
-
-newtype CellUpdate = AddrUpdate String
 
 updated :: forall s t v. KnownSymbol s => Cell v s t -> CellUpdate
 updated _ = AddrUpdate $ symbolVal (Proxy :: Proxy s)

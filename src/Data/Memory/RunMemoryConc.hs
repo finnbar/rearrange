@@ -1,15 +1,14 @@
 {-# LANGUAGE FlexibleInstances, FlexibleContexts, UndecidableInstances, ScopedTypeVariables #-}
 
-module Data.RunMemoryConc (
+module Data.Memory.RunMemoryConc (
     runMultiMems,
     runMultiPartialMems
 ) where
 
 import Data.Type.HList
-import Data.RunMemory
-import Data.MemoryCell (CellUpdate(..))
+import Data.Memory.RunMemory
+import Data.Memory.Types (CellUpdate(..), Set(..))
 
-import Data.Type.Set hiding (Proxy)
 import Control.Concurrent (forkFinally)
 import Control.Monad (void)
 import Control.Concurrent.MVar

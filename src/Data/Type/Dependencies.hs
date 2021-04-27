@@ -6,7 +6,7 @@ module Data.Type.Dependencies (
     GetDependency
     ) where
 
-import Data.Memory (Memory(..))
+import Data.Memory.Types (Memory(..))
 import Data.Type.Utils (NonEmptyIntersect)
 
 import GHC.TypeLits

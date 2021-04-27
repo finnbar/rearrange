@@ -7,7 +7,6 @@ import Functions
 
 import Foreign.C.Types
 import Foreign.Ptr
-import Data.Type.Set
 
 foreign import ccall "inputCell" inputCell :: IO (Ptr CInt)
 foreign import ccall "intermediateCell" intermediateCell :: IO (Ptr CInt)

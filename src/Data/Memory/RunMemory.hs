@@ -1,22 +1,20 @@
 {-# LANGUAGE FlexibleInstances, FlexibleContexts, UndecidableInstances,
     ScopedTypeVariables, FunctionalDependencies #-}
 
-module Data.RunMemory (
+module Data.Memory.RunMemory (
     runMem, RunMems(..),
     RunPartialMems(..)
 ) where
 
-import Data.Memory (Memory(..), TupleUnion)
-import Data.MemoryCell (Cell(..), CellUpdate(..))
+import Data.Memory.Types
 
 import Data.Type.HList
-import Data.Type.Set hiding (Proxy)
 import GHC.TypeLits
 import Data.Proxy
 
 -- FULL UPDATE (run all memory functions)
 
-runMem :: Subset (TupleUnion s) env => Memory m s b -> Set env -> m b
+runMem :: Subset (MemoryUnion s) env => Memory m s b -> Set env -> m b
 runMem mem env = runMemory mem (subset env)
 
 class RunMems m xs env out | xs env -> out where
@@ -25,7 +23,7 @@ class RunMems m xs env out | xs env -> out where
 instance Monad m => RunMems m '[] env '[] where
     runMems _ _ = return HNil
 
-instance (Monad m, RunMems m xs env out, Subset (TupleUnion s) env) =>
+instance (Monad m, RunMems m xs env out, Subset (MemoryUnion s) env) =>
     RunMems m (Memory m s b ': xs) env (b ': out) where
         runMems (mem :+: mems) env = do
             r <- runMem mem env
@@ -41,7 +39,7 @@ instance RunPartialMems m '[] env where
     runPartialMems HNil _ _ finaliser = finaliser
 
 instance (Monad m, RunPartialMems m xs env, RequiresUpdate rs,
-    UpdateEffects ws, Subset (Union rs ws) env)
+    UpdateEffects ws, Subset (CellsUnion rs ws) env)
     => RunPartialMems m (Memory m '(rs, ws) c ': xs) env where
         runPartialMems (mem :+: mems) env partial fin =
             if any (requiresUpdate (Proxy :: Proxy rs)) partial

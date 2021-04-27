@@ -1,12 +1,11 @@
 {-# LANGUAGE FlexibleInstances, RankNTypes, ScopedTypeVariables #-}
 
-module ToCells where
+module Data.Memory.ToCells where
 
 import MonadRW
 
-import Data.MemoryCell
+import Data.Memory.Types
 import Data.Type.HList
-import Data.Type.Set
 import Foreign.Storable
 import Foreign.Ptr
 import GHC.TypeLits (Symbol)
