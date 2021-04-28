@@ -16,11 +16,11 @@ import Foreign.Ptr (Ptr)
 import GHC.TypeLits
 import Data.Proxy
 
-readCell :: forall s v t m c. (MonadRW m v c, c t) =>
+readCell :: forall s v t m c. (MonadRW m v, Constr m v t) =>
     Memory m '( '[Cell v s t], '[] ) t
 readCell = Mem $ \(Ext (Cell pt) Empty) -> readVar pt
 
-writeCell :: forall s v t m c. (MonadRW m v c, c t) =>
+writeCell :: forall s v t m c. (MonadRW m v, Constr m v t) =>
     t -> Memory m '( '[], '[Cell v s t] ) ()
 writeCell x = Mem $ \(Ext (Cell pt) Empty) -> writeVar pt x
 

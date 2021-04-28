@@ -31,3 +31,10 @@ memoryIO act = Mem $ \Empty -> act
 
 unsafeMemoryIO :: P.Monad m => IO a -> Memory m '( '[], '[]) a
 unsafeMemoryIO act = Mem $ \Empty -> P.return $ unsafePerformIO act
+
+-- TODO HERE: introduce local variables. Do this at value level, so the vars
+-- can only be used in that location. Challenge is keeping them consistent
+-- between runs, so they might still need to be part of the environment
+-- somehow (my guess is that you extend Memory with a third parameter that
+-- isn't union'd). Might need to look up the STM trick that makes sure
+-- variables aren't reused.

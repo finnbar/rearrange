@@ -10,7 +10,7 @@ module Data.Memory.Types (
 -- Reexports some of effect-monad and provides application-specific nub, union
 -- and a few others.
 
-import MonadRW (MonadRW)
+import MonadRW (MonadRW(..))
 
 import Data.Type.Set (Split(..), Set(..), Sort, (:++), Cmp, Subset(..))
 import GHC.TypeLits (Symbol, CmpSymbol, TypeError, ErrorMessage(Text, (:$$:)))
@@ -20,7 +20,7 @@ newtype Memory (m :: * -> *) (s :: ([*], [*])) a =
     Mem { runMemory :: Set (MemoryUnion s) -> m a }
 
 data Cell (v :: * -> *) (s :: Symbol) t where
-    Cell :: forall s t m v c. (Monad m, MonadRW m v c, c t) => v t -> Cell v s t
+    Cell :: forall s t m v c. (Monad m, MonadRW m v, Constr m v t) => v t -> Cell v s t
 
 newtype CellUpdate = AddrUpdate String
 

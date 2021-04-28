@@ -1,9 +1,10 @@
-{-# LANGUAGE RebindableSyntax, ForeignFunctionInterface, TypeApplications,
-    DataKinds, PartialTypeSignatures #-}
+{-# LANGUAGE RebindableSyntax, TypeApplications, DataKinds,
+    FlexibleContexts, ConstraintKinds, PartialTypeSignatures #-}
 
 module Functions where
 
 import Rearrange
+import MonadRW
 
 import Prelude hiding (Monad(..))
 import Foreign.Ptr (Ptr)

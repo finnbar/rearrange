@@ -10,7 +10,7 @@ import Foreign.Storable
 import Foreign.Ptr
 import GHC.TypeLits (Symbol)
 
-toCell :: forall (s :: Symbol) t m v c. (Monad m, MonadRW m v c, c t)
+toCell :: forall (s :: Symbol) t m v c. (Monad m, MonadRW m v, Constr m v t)
     => m (v t) -> m (Cell v s t)
 toCell action = action >>= \ptr -> return (Cell @s @t @m ptr)
 

@@ -25,7 +25,7 @@ main = do
         toCell @"in2" inputCell2 :+:
         toCell @"out2" outputCell2 :+: HNil
     cInput
-    let program = toSortedComponents $ example2 :+: example :+: example4 :+: example5 :+: HNil
+    let program = toSortedComponents $ example :+: example4 :+: example5 :+: example2 :+: HNil
     let env = toSet addrs
     runMultiMems program env
     cOutput

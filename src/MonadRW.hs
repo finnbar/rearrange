@@ -1,4 +1,4 @@
-{-# LANGUAGE AllowAmbiguousTypes, FunctionalDependencies, ConstraintKinds,
+{-# LANGUAGE AllowAmbiguousTypes, ConstraintKinds,
     FlexibleInstances #-}
 
 module MonadRW (
@@ -21,33 +21,37 @@ import Control.Monad.IO.Class (MonadIO(..), liftIO)
 -- just takes the relevant instances from MonadRead and MonadWrite, but that
 -- has issues with functional dependences.
 
-class Unconstrained a
-instance Unconstrained a
+class MonadRW (m :: * -> *) (v :: * -> *) where
+    type Constr m v a :: Constraint
+    readVar :: Constr m v a => v a -> m a
+    writeVar :: Constr m v a => v a -> a -> m ()
 
-class MonadRW (m :: * -> *) (v :: * -> *) (c :: * -> Constraint) | m v -> c where
-    readVar :: c a => v a -> m a
-    writeVar :: c a => v a -> a -> m ()
-
-instance (MonadIO m) => MonadRW m Ptr Storable where
+instance (MonadIO m) => MonadRW m Ptr where
+    type Constr m Ptr a = Storable a
     readVar = liftIO . peek
     writeVar v = liftIO . poke v
 
-instance (MonadIO m) => MonadRW m TVar Unconstrained where
+instance (MonadIO m) => MonadRW m TVar where
+    type Constr m TVar a = ()
     readVar = liftIO . readTVarIO
     writeVar v = liftIO . atomically . writeTVar v
 
-instance MonadRW STM TVar Unconstrained where
+instance MonadRW STM TVar where
+    type Constr STM TVar a = ()
     readVar = readTVar
     writeVar = writeTVar
 
-instance (MonadIO m) => MonadRW m MVar Unconstrained where
+instance (MonadIO m) => MonadRW m MVar where
+    type Constr m MVar a = ()
     readVar = liftIO . readMVar
     writeVar v = liftIO . putMVar v
 
-instance (MonadIO m) => MonadRW m IORef Unconstrained where
+instance (MonadIO m) => MonadRW m IORef where
+    type Constr m IORef a = ()
     readVar = liftIO . readIORef
     writeVar v = liftIO . writeIORef v
 
-instance MonadRW (ST s) (STRef s) Unconstrained where
+instance MonadRW (ST s) (STRef s) where
+    type Constr (ST s) (STRef s) a = ()
     readVar = readSTRef
     writeVar = writeSTRef
