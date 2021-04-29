@@ -24,9 +24,9 @@ type family PartialToBool (x :: PartialOrder) :: Bool where
     PartialToBool 'NOT = 'False
 
 type family GetDependency x y :: PartialOrder where
-    GetDependency (Memory _ rws _) (Memory _ rws' _) = GetTupleDependency rws rws'
-    GetDependency (Memory m rws a) (t b) = GetDependency (Memory m rws a) b
-    GetDependency (t a) (Memory m rws b) = GetDependency a (Memory m rws b)
+    GetDependency (Memory _ _ rws _) (Memory _ _ rws' _) = GetTupleDependency rws rws'
+    GetDependency (Memory m l rws a) (t b) = GetDependency (Memory m l rws a) b
+    GetDependency (t a) (Memory m l rws b) = GetDependency a (Memory m l rws b)
     GetDependency (t a) (t' b) = GetDependency a b
     GetDependency x y =
         TypeError (Text "Cannot get dependency of non-Memory types: " :<>:

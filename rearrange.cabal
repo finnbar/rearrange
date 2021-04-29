@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 0f5231ce28609efbe6dbf56f19a21a099f656d2a1ec024fa79e5c29fd35bf8ac
+-- hash: 836f29cdfd0d5d9de2426c4e6bea583d2c6c29eab3a287bd9dfe7ab7d5bf6ebd
 
 name:           rearrange
 version:        0.1.0.0
@@ -29,6 +29,7 @@ library
   exposed-modules:
       Data.Memory.Memory
       Data.Memory.MemoryCell
+      Data.Memory.Program
       Data.Memory.RunMemory
       Data.Memory.RunMemoryConc
       Data.Memory.ToCells
@@ -52,6 +53,7 @@ library
       csrc/main.c
   build-depends:
       base >=4.7 && <5
+    , data-default
     , effect-monad
     , first-class-families
     , monad-var
@@ -68,6 +70,7 @@ executable rearrange-exe
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
+    , data-default
     , effect-monad
     , first-class-families
     , monad-var
@@ -85,6 +88,7 @@ test-suite rearrange-test
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
+    , data-default
     , effect-monad
     , first-class-families
     , monad-var

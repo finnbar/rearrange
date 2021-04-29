@@ -25,6 +25,7 @@ dependencies:
 - effect-monad
 - first-class-families
 - monad-var
+- data-default
 
 library:
   source-dirs: src

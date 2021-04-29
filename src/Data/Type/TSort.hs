@@ -62,6 +62,9 @@ type family FLS (xss :: [[*]]) :: [*] where
             Text "Their execution cannot be ordered." :$$:
             Text "To allow compilation, break the loop somehow.")
 
-ordered :: (RearrangeList xs xs', xs' ~ Eval (Ordered IsLessThan xs)) =>
+type OrderedConstraints xs xs' =
+    (RearrangeList xs xs', xs' ~ Eval (Ordered IsLessThan xs))
+
+ordered :: OrderedConstraints xs xs' =>
     HList xs -> HList xs'
 ordered = rearrange

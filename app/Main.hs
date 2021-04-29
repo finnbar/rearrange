@@ -25,8 +25,9 @@ main = do
         toCell @"in2" inputCell2 :+:
         toCell @"out2" outputCell2 :+: HNil
     cInput
-    let program = toSortedComponents $ example :+: example4 :+: example5 :+: example2 :+: HNil
+    let prog = example :+: example4 :+: example5 :+: example2 :+: HNil
     let env = toSet addrs
-    runMultiMems program env
+    program <- makeParallelProgram prog env
+    runParallelProgram program
     cOutput
-    runMultiPartialMems program env [updatedInEnv @"in" env, updatedInEnv @"out" env] cOutput
+    runParallelProgramPartial program [updatedInEnv @"in" env, updatedInEnv @"out" env] cOutput

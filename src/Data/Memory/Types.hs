@@ -16,8 +16,10 @@ import Data.Type.Set (Split(..), Set(..), Sort, (:++), Cmp, Subset(..))
 import GHC.TypeLits (Symbol, CmpSymbol, TypeError, ErrorMessage(Text, (:$$:)))
 import Data.Kind (Constraint)
 
-newtype Memory (m :: * -> *) (s :: ([*], [*])) a =
-    Mem { runMemory :: Set (MemoryUnion s) -> m a }
+newtype Memory (m :: * -> *) (l :: *) (s :: ([*], [*])) a =
+    Mem { runMemory :: l -> Set (MemoryUnion s) -> m a }
+
+type MemNoLocal m s a = Memory m () s a
 
 data Cell (v :: * -> *) (s :: Symbol) t where
     Cell :: forall s t m v c. (Monad m, MonadRW m v, Constr m v t) => v t -> Cell v s t

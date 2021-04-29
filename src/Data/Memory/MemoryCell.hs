@@ -16,13 +16,13 @@ import Foreign.Ptr (Ptr)
 import GHC.TypeLits
 import Data.Proxy
 
-readCell :: forall s v t m c. (MonadRW m v, Constr m v t) =>
-    Memory m '( '[Cell v s t], '[] ) t
-readCell = Mem $ \(Ext (Cell pt) Empty) -> readVar pt
+readCell :: forall s v t m l. (MonadRW m v, Constr m v t) =>
+    Memory m l '( '[Cell v s t], '[] ) t
+readCell = Mem $ \_ (Ext (Cell pt) Empty) -> readVar pt
 
-writeCell :: forall s v t m c. (MonadRW m v, Constr m v t) =>
-    t -> Memory m '( '[], '[Cell v s t] ) ()
-writeCell x = Mem $ \(Ext (Cell pt) Empty) -> writeVar pt x
+writeCell :: forall s v t m l. (MonadRW m v, Constr m v t) =>
+    t -> Memory m l '( '[], '[Cell v s t] ) ()
+writeCell x = Mem $ \_ (Ext (Cell pt) Empty) -> writeVar pt x
 
 updated :: forall s t v. KnownSymbol s => Cell v s t -> CellUpdate
 updated _ = AddrUpdate $ symbolVal (Proxy :: Proxy s)

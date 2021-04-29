@@ -1,7 +1,7 @@
 {-# LANGUAGE UndecidableInstances, FlexibleContexts #-}
 
 module Data.Type.ComponentSearch (
-    toComponents, toSortedComponents
+    toComponents, toSortedComponents, SortedComponentsConstraints
 ) where
 
 import Data.Type.AdjacencyList
@@ -31,8 +31,9 @@ toComponents :: (TransformList xs xs',
 toComponents = transform
 
 type MultiTopSort xs = Eval (Map (Ordered IsLessThan) xs)
+type SortedComponentsConstraints xs xs' xs'' = (TransformList xs xs'',
+    xs' ~ Components xs, xs'' ~ FlattenToHList (MultiTopSort xs'))
 
-toSortedComponents :: (TransformList xs xs'',
-    xs' ~ Components xs, xs'' ~ FlattenToHList (MultiTopSort xs')) =>
+toSortedComponents :: SortedComponentsConstraints xs xs' xs'' =>
     HList xs -> HList xs''
 toSortedComponents = transform
