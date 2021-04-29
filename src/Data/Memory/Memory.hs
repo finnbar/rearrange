@@ -16,9 +16,9 @@ import Control.Effect
 import System.IO.Unsafe (unsafePerformIO)
 import Data.Type.Set (Union)
 
--- TODO: ADD INVARIANT THAT YOU CAN'T HAVE DIFFERING CELLS WITH SAME NAME
 instance P.Monad m => Effect (Memory m l) where
     type Inv (Memory m l) f g = (IsMemory f, IsMemory g,
+        NoConflicts f, NoConflicts g,
         Split (MemoryUnion f) (MemoryUnion g) (MemoryUnion (MemoryPlus f g)))
     type Unit (Memory m l) = '( '[], '[] )
     type Plus (Memory m l) f g = MemoryPlus f g

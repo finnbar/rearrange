@@ -4,7 +4,7 @@
 module Data.Memory.Types (
     Memory(..), Cell(..), CellUpdate(..), IsMemory,
     Split(..), Set(..), Sort(..), MemoryUnion, MemoryPlus,
-    Subset(..)
+    Subset(..), NoConflicts
 ) where
 
 -- Reexports some of effect-monad and provides application-specific nub, union
@@ -41,3 +41,17 @@ type family MemoryPlus (s :: ([*], [*])) (t :: ([*], [*])) :: ([*], [*]) where
 
 type family IsMemory (x :: ([*], [*])) :: Constraint where
     IsMemory '(s, t) = (IsSet s, IsSet t)
+
+type family NoConflicts_ (t :: [*]) :: Constraint where
+    NoConflicts_ '[] = ()
+    NoConflicts_ '[Cell v s t] = ()
+    NoConflicts_ (Cell v s t ': (Cell v s t ': e)) =
+        NoConflicts_ (Cell v s t ': e)
+    NoConflicts_ (Cell v s t ': (Cell v' s t' ': e)) =
+        TypeError (Text "Two named cells have different types or constructors."
+        :$$: Text "A named cell must always have the same type and constructor.")
+    NoConflicts_ (Cell v s t ': (Cell v' s' t' ': e)) =
+        NoConflicts_ (Cell v' s' t' ': e)
+
+type family NoConflicts (x :: ([*], [*])) :: Constraint where
+    NoConflicts '(s, t) = NoConflicts_ (Union s t)

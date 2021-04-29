@@ -31,7 +31,9 @@ foreign import ccall "coutput" cOutput :: IO ()
 -- Can we have something like withEnv :: Env -> Memory... -> Memory...
 -- that forces things to have the types mentioned in the env? This would just
 -- be at type-level, the value-level function would just return the memory
--- computation given.
+-- computation given. What happens if I enforce subset? e.g.
+-- withEnv :: (Subset (memory used) env) => Set env -> Memory... -> Memory...
+-- Might just have to be a closed type family that performs lookup on symbols.
 
 main :: IO ()
 main = do
