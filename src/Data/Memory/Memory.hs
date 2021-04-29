@@ -1,10 +1,10 @@
-{-# LANGUAGE UndecidableInstances, AllowAmbiguousTypes, ExplicitForAll #-}
+{-# LANGUAGE UndecidableInstances, AllowAmbiguousTypes, ExplicitForAll, FlexibleContexts #-}
 
 module Data.Memory.Memory (
     Memory(..), Cell(..),
-    MemoryUnion, CellsUnion,
+    MemoryUnion,
     memoryIO, unsafeMemoryIO,
-    readLocal, writeLocal
+    readLocal, writeLocal, ifThenElse
 ) where
 
 import MonadRW (MonadRW(..))
@@ -14,7 +14,9 @@ import Prelude hiding (Monad(..))
 import qualified Prelude as P
 import Control.Effect
 import System.IO.Unsafe (unsafePerformIO)
+import Data.Type.Set (Union)
 
+-- TODO: ADD INVARIANT THAT YOU CAN'T HAVE DIFFERING CELLS WITH SAME NAME
 instance P.Monad m => Effect (Memory m l) where
     type Inv (Memory m l) f g = (IsMemory f, IsMemory g,
         Split (MemoryUnion f) (MemoryUnion g) (MemoryUnion (MemoryPlus f g)))
@@ -26,16 +28,24 @@ instance P.Monad m => Effect (Memory m l) where
         Mem $ \l fg -> let (f, g) = split fg
                       in e l f P.>>= \x -> (runMemory . k) x l g
 
+ifThenElse :: (rs'' ~ Union rs rs', ws'' ~ Union ws ws',
+    Subset (Union rs ws) (Union rs'' ws''),
+    Subset (Union rs' ws') (Union rs'' ws'')) =>
+    Bool -> Memory m c '(rs, ws) a -> Memory m c '(rs', ws') a
+    -> Memory m c '(rs'', ws'') a
+ifThenElse True  a _ = Mem $ \l set -> runMemory a l (subset set)
+ifThenElse False _ b = Mem $ \l set -> runMemory b l (subset set)
+
 memoryIO :: IO a -> Memory IO l '( '[], '[]) a
 memoryIO act = Mem $ \_ Empty -> act
 
 unsafeMemoryIO :: P.Monad m => IO a -> Memory m l '( '[], '[]) a
 unsafeMemoryIO act = Mem $ \_ Empty -> P.return $ unsafePerformIO act
 
-readLocal :: forall v l m. (P.Monad m, MonadRW m v, Constr m v l) =>
+readLocal :: forall l v m. (P.Monad m, MonadRW m v, Constr m v l) =>
     Memory m (v l) '( '[], '[]) l
 readLocal = Mem $ \l Empty -> readVar l
 
-writeLocal :: forall v l m. (P.Monad m, MonadRW m v, Constr m v l) =>
+writeLocal :: forall l v m. (P.Monad m, MonadRW m v, Constr m v l) =>
     l -> Memory m (v l) '( '[], '[]) ()
 writeLocal v = Mem $ \l Empty -> writeVar l v

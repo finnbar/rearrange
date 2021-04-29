@@ -11,6 +11,7 @@ import Data.Memory.Types
 import Data.Type.HList
 import GHC.TypeLits
 import Data.Proxy
+import Data.Type.Set (Union)
 
 -- FULL UPDATE (run all memory functions)
 
@@ -42,7 +43,7 @@ instance RunPartialMems m '[] env '[] where
 -- If the local memory is (), then we only need to run this if the inputs have
 -- changed.
 instance {-# OVERLAPPING #-} (Monad m, RunPartialMems m xs env locals, RequiresUpdate rs,
-    UpdateEffects ws, Subset (CellsUnion rs ws) env)
+    UpdateEffects ws, Subset (Union rs ws) env)
     => RunPartialMems m (Memory m () '(rs, ws) c ': xs) env (() ': locals) where
         runPartialMems (mem :+: mems) env (() :+: ls) partial fin =
             if any (requiresUpdate (Proxy :: Proxy rs)) partial
@@ -54,7 +55,7 @@ instance {-# OVERLAPPING #-} (Monad m, RunPartialMems m xs env locals, RequiresU
 -- If the local memory isn't (), then the local memory was likely updated and
 -- as such we need to run the computation regardless.
 instance {-# OVERLAPPABLE #-} (Monad m, RunPartialMems m xs env locals, RequiresUpdate rs,
-    UpdateEffects ws, Subset (CellsUnion rs ws) env)
+    UpdateEffects ws, Subset (Union rs ws) env)
     => RunPartialMems m (Memory m l '(rs, ws) c ': xs) env (l ': locals) where
         runPartialMems (mem :+: mems) env (l :+: ls) partial fin = do
             res <- runMem mem env l

@@ -2,7 +2,7 @@
 
 module Data.Type.HList (
     HList(..),
-    hCombine,
+    hCombine, hHead, hTail,
     RearrangeList(..),
     RestructureList(..),
     TransformList(..),
@@ -32,6 +32,15 @@ instance (Show x, Show (HList xs)) => Show (HList (x ': xs)) where
 hCombine :: HList xs -> HList ys -> HList (Combine xs ys)
 hCombine HNil ys = ys
 hCombine (x :+: xs) ys = x :+: hCombine xs ys
+
+hHead :: HList (x ': xs) -> x
+hHead (x :+: _) = x
+
+hTail :: HList (x ': xs) -> HList xs
+hTail (_ :+: xs) = xs
+
+class ConvertToHList x out | x -> out where
+    toHList :: [x] -> HList out
 
 -- GetHListElem, which finds an element of the type and returns the list
 -- without that type.

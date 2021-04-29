@@ -12,40 +12,54 @@ import Data.IORef
 import Foreign.C.Types
 import Control.Concurrent (threadDelay)
 
-noLocalMem :: Memory m () cs a -> Memory m () cs a
+noLocalMem :: Memory IO () cs a -> Memory IO () cs a
 noLocalMem = id
 
-example = noLocalMem $ do
-    input <- readCell @"in" @Ptr
-    let output = input + 2 :: CInt
-    memoryIO $ putStrLn "example"
-    writeCell @"inter" @Ptr output
+-- "normalise the input signal"
+-- for this we just divide by 10, but any arbitrary function will do.
+f = noLocalMem $ do
+    inp <- readCell @"in" @Ptr @CInt
+    let normalised = fromIntegral $ inp `div` 10
+    writeCell @"int" @IORef @Int normalised
 
-example2 = noLocalMem $ do
-    input <- readCell @"inter" @Ptr
-    let output = input + 3 :: CInt
-    memoryIO $ putStrLn "example2"
-    writeCell @"out" @Ptr output
+-- average the last five inputs in local memory
+g :: Memory IO (IORef [Int]) '( '[Cell IORef "int" Int],
+                     '[Cell IORef "int2" Int, Cell IORef "int3" Int]) ()
+g = do
+    inp <- readCell @"int"
+    averaging <- readLocal
+    let averaging' = take 5 (inp : averaging)
+    let avg = sum averaging' `div` 5
+    writeLocal averaging'
+    writeCell @"int2" avg
+    writeCell @"int3" avg
 
-example3 = noLocalMem $ do
-    input <- readCell @"out" @Ptr
-    let output = input + 4 :: CInt
-    memoryIO $ putStrLn "example3"
-    writeCell @"in" @Ptr output
+-- If the value surpasses a threshold, write 100; else write 0.
+h :: Memory
+  IO () '( '[Cell IORef "int2" Int], '[Cell Ptr "out" CInt]) ()
+h = noLocalMem $ do
+    inp <- readCell @"int2"
+    if inp > 5 then
+        writeCell @"out" @Ptr @CInt 100
+    else
+        writeCell @"out" @Ptr @CInt 0
 
-example4 = do
-    counter <- readLocal @IORef
-    let counter' = counter + 1
-    writeLocal counter'
-    input <- readCell @"out" @Ptr @CInt
-    memoryIO $ putStrLn $ "example4: " ++ show counter'
+-- If the value surpasses a threshold, write 100; else write 0.
+i :: Memory
+  IO () '( '[Cell IORef "int3" Int], '[Cell Ptr "out2" CInt]) ()
+i = noLocalMem $ do
+    inp <- readCell @"int3"
+    if inp > 5 then
+        writeCell @"out2" @Ptr @CInt 100
+    else
+        writeCell @"out2" @Ptr @CInt 0
 
-example5 = do
-    memoryIO $ threadDelay 10
-    counter <- readLocal @IORef
-    let counter' = counter + 1
-    writeLocal counter'
-    input <- readCell @"in2" @Ptr
-    let output = input + 2 :: CInt
-    memoryIO $ putStrLn $ "example5: " ++ show counter'
-    writeCell @"out2" @Ptr output
+j :: Memory IO (IORef [Int]) '( '[Cell Ptr "in2" CInt],
+                     '[Cell Ptr "out3" CInt]) ()
+j = do
+    inp <- readCell @"in2"
+    averaging <- readLocal
+    let averaging' = take 5 (fromIntegral inp : averaging)
+    let avg = sum averaging' `div` 5
+    writeLocal averaging'
+    writeCell @"out3" $ fromIntegral avg
