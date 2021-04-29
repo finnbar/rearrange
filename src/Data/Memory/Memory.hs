@@ -1,4 +1,4 @@
-{-# LANGUAGE UndecidableInstances, AllowAmbiguousTypes #-}
+{-# LANGUAGE UndecidableInstances, AllowAmbiguousTypes, ExplicitForAll #-}
 
 module Data.Memory.Memory (
     Memory(..), Cell(..),
@@ -32,10 +32,10 @@ memoryIO act = Mem $ \_ Empty -> act
 unsafeMemoryIO :: P.Monad m => IO a -> Memory m l '( '[], '[]) a
 unsafeMemoryIO act = Mem $ \_ Empty -> P.return $ unsafePerformIO act
 
-readLocal :: (P.Monad m, MonadRW m v, Constr m v l) =>
+readLocal :: forall v l m. (P.Monad m, MonadRW m v, Constr m v l) =>
     Memory m (v l) '( '[], '[]) l
 readLocal = Mem $ \l Empty -> readVar l
 
-writeLocal :: (P.Monad m, MonadRW m v, Constr m v l) =>
+writeLocal :: forall v l m. (P.Monad m, MonadRW m v, Constr m v l) =>
     l -> Memory m (v l) '( '[], '[]) ()
 writeLocal v = Mem $ \l Empty -> writeVar l v
