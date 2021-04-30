@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 9c4f4e2df4d3089337f9a4435f19eda4766db9f8935862112d190b3fb195cb57
+-- hash: 7dcd92ec7256a7300633e7c7eaa50b396a46c7791727bf720cbe06abc2514856
 
 name:           rearrange
 version:        0.1.0.0
@@ -69,7 +69,7 @@ executable rearrange-exe
       Paths_rearrange
   hs-source-dirs:
       app
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N -O0
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
     , data-default

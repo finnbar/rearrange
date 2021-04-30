@@ -16,7 +16,6 @@ foreign import ccall "cinput" cInput :: IO ()
 
 main :: IO ()
 main = do
-    -- TODO: compile times are super slow. Try to fix.
     let prog = F.f :+: F.g :+: F.h :+: F.i :+: F.j :+: HNil
     env <- getEnv
     program <- makeParallelProgram prog env

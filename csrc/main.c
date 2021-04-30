@@ -30,8 +30,3 @@ void cinput() {
     int x = scanf("%d", &input);
     x = scanf("%d", &input2);
 }
-
-void coutput() {
-    printf("in: %d, in2: %d, out: %d, out2: %d, out3: %d\n",
-        input, input2, output, output2, output3);
-}

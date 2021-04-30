@@ -49,13 +49,13 @@ type family Extracted (m :: * -> *) (xs :: [*]) :: [*] where
     Extracted m '[] = '[]
     Extracted m (m x ': xs) = x ': Extracted m xs
 
-class Distribute xs m where
+class Distribute m xs where
     distribute :: HList xs -> m (HList (Extracted m xs))
 
-instance Monad m => Distribute '[] m where
+instance Monad m => Distribute m '[] where
     distribute _ = return HNil
 
-instance (Distribute xs m, Monad m) => Distribute (m x ': xs) m where
+instance (Distribute m xs, Monad m) => Distribute m (m x ': xs) where
     distribute (action :+: actions) = do
         res <- action
         ress <- distribute actions
