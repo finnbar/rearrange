@@ -28,13 +28,19 @@ instance P.Monad m => Effect (Memory m l) where
         Mem $ \l fg -> let (f, g) = split fg
                       in e l f P.>>= \x -> (runMemory . k) x l g
 
-ifThenElse :: (rs'' ~ Union rs rs', ws'' ~ Union ws ws',
+-- Rebindable syntax is making life annoying.
+ifThenElse :: Bool -> a -> a -> a
+ifThenElse True a _ = a
+ifThenElse False _ a = a
+
+ifThenElseMem :: (rs'' ~ Union rs rs', ws'' ~ Union ws ws',
+    Split rs rs' rs'', Split ws ws' ws'',
     Subset (Union rs ws) (Union rs'' ws''),
     Subset (Union rs' ws') (Union rs'' ws'')) =>
     Bool -> Memory m c '(rs, ws) a -> Memory m c '(rs', ws') a
     -> Memory m c '(rs'', ws'') a
-ifThenElse True  a _ = Mem $ \l set -> runMemory a l (subset set)
-ifThenElse False _ b = Mem $ \l set -> runMemory b l (subset set)
+ifThenElseMem True  a _ = Mem $ \l set -> runMemory a l (subset set)
+ifThenElseMem False _ b = Mem $ \l set -> runMemory b l (subset set)
 
 memoryIO :: IO a -> Memory IO l '( '[], '[]) a
 memoryIO act = Mem $ \_ Empty -> act

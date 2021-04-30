@@ -40,19 +40,15 @@ g = do
 h = withEnvM @() getEnv $ do
     inp <- readCell @"int2"
     memoryIO $ putStrLn $ "h " ++ show inp
-    if inp > 5 then
-        writeCell @"out" @Ptr @CInt 100
-    else
-        writeCell @"out" @Ptr @CInt 0
+    let res = if inp > 5 then 100 else 0
+    writeCell @"out" res
 
 -- If the value surpasses a threshold, write 100; else write 0.
 i = withEnvM @() getEnv $ do
     inp <- readCell @"int3"
     memoryIO $ putStrLn $ "i " ++ show inp
-    if inp > 5 then
-        writeCell @"out2" @Ptr @CInt 100
-    else
-        writeCell @"out2" @Ptr @CInt 0
+    let res = if inp > 5 then 100 else 0
+    writeCell @"out2" res
 
 j = withEnvM @(IORef [Int]) getEnv $ do
     inp <- readCell @"in2"
