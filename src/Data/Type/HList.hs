@@ -1,4 +1,5 @@
-{-# LANGUAGE UndecidableInstances, FlexibleInstances, ScopedTypeVariables, FunctionalDependencies #-}
+{-# LANGUAGE UndecidableInstances, FlexibleInstances, ScopedTypeVariables,
+    FunctionalDependencies, FlexibleContexts #-}
 
 module Data.Type.HList (
     HList(..),
@@ -7,7 +8,7 @@ module Data.Type.HList (
     RestructureList(..),
     TransformList(..),
     SubHList(..),
-    FlattenToHList
+    FlattenToHList,
     ) where
 
 import Data.Type.Utils (Combine)
@@ -22,6 +23,8 @@ data HList :: [*] -> * where
     (:+:) :: x -> HList xs -> HList (x ': xs)
 
 infixr 5 :+:
+
+-- Useful homogeneous list functions ported to HLists.
 
 instance Show (HList '[]) where
     show HNil = "HNil"
@@ -39,8 +42,31 @@ hHead (x :+: _) = x
 hTail :: HList (x ': xs) -> HList xs
 hTail (_ :+: xs) = xs
 
-class ConvertToHList x out | x -> out where
-    toHList :: [x] -> HList out
+-- TODO: Neither of these work very well.
+
+-- | ApplyHList takes a list of functions and applies e to each.
+class ApplyHList fs e out | fs e -> out where
+    hApply :: HList fs -> e -> HList out
+
+instance ApplyHList '[] e '[] where
+    hApply HNil _ = HNil
+
+instance ApplyHList fs e outs =>
+    ApplyHList ((e -> x) ': fs) e (x ': outs) where
+        hApply (f :+: fs) e = f e :+: hApply fs e
+
+-- | MapHList applies a function to a list of arguments.
+-- TODO: this is currently extremely limited. Would be nice for it to use some
+-- machinery to propagate constraints (e.g. for `hMap show`).
+class MapHList xs f out | xs f -> out where
+    hMap :: f -> HList xs -> HList out
+
+instance MapHList '[] f '[] where
+    hMap _ HNil = HNil
+
+instance MapHList xs (a -> b) outs =>
+    MapHList (a ': xs) (a -> b) (b ': outs) where
+        hMap f (x :+: xs) = f x :+: hMap f xs
 
 -- GetHListElem, which finds an element of the type and returns the list
 -- without that type.

@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 836f29cdfd0d5d9de2426c4e6bea583d2c6c29eab3a287bd9dfe7ab7d5bf6ebd
+-- hash: 9c4f4e2df4d3089337f9a4435f19eda4766db9f8935862112d190b3fb195cb57
 
 name:           rearrange
 version:        0.1.0.0
@@ -34,6 +34,7 @@ library
       Data.Memory.RunMemoryConc
       Data.Memory.ToCells
       Data.Memory.Types
+      Data.Memory.WithEnv
       Data.Type.AdjacencyList
       Data.Type.ComponentSearch
       Data.Type.Dependencies
@@ -63,11 +64,12 @@ library
 executable rearrange-exe
   main-is: Main.hs
   other-modules:
+      Env
       Functions
       Paths_rearrange
   hs-source-dirs:
       app
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N -O0
   build-depends:
       base >=4.7 && <5
     , data-default

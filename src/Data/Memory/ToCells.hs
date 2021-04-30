@@ -23,14 +23,14 @@ printCell (Cell p) = readVar p >>= \v ->
     putStrLn $ symbolVal (Proxy @s) ++ ": " ++ show v
 
 class PrintCells xs where
-    printCells :: HList xs -> IO ()
+    printCells :: Set xs -> IO ()
 
 instance PrintCells '[] where
-    printCells HNil = return ()
+    printCells Empty = return ()
 
 instance (PrintCells xs, KnownSymbol s, MonadRW IO v, Constr IO v t, Show t) =>
     PrintCells (Cell v s t ': xs) where
-        printCells (x :+: xs) = printCell x >> printCells xs
+        printCells (Ext x xs) = printCell x >> printCells xs
 
 toSet :: (Sortable s, Nubable (Sort s), ToSet s) =>
     HList s -> Set (Nub (Sort s))
@@ -60,3 +60,4 @@ instance (Distribute xs m, Monad m) => Distribute (m x ': xs) m where
         res <- action
         ress <- distribute actions
         return $ res :+: ress
+    {-# NOINLINE distribute #-}
