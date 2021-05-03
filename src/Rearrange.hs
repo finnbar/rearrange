@@ -3,7 +3,7 @@ module Rearrange (
     Memory(..), Cell(..), updated, updatedInEnv, hCombine, printCell, ifThenElse,
     printCells, PrintCells, toCell, toSet, distribute, HList(..),
     Effect(..), ordered, toSortedComponents, module DMP, withEnv,
-    withEnvM) where
+    withEnvM, growEnv) where
 
 -- TODO: Fix up these imports to use Data.Memory.Types more, add in local stuff.
 -- Then write some computations that use local memory and test.
@@ -17,4 +17,4 @@ import Data.Type.HList (HList(..), hCombine)
 import Data.Type.TSort (ordered)
 import Data.Type.ComponentSearch (toSortedComponents)
 import Data.Memory.Program as DMP
-import Data.Memory.WithEnv (withEnv, withEnvM)
+import Data.Memory.EnvUtil (withEnv, withEnvM, growEnv)
