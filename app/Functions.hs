@@ -21,29 +21,29 @@ f = withEnvM getEnv $ do
     memoryIO $ putStrLn $ "f " ++ show inp
     --inp <- readCell @"in" @Ptr @Int
     let normalised = fromIntegral $ inp `div` 2
-    writeCell @"int" normalised
+    writeInterCell @"int" @Int normalised
 
 -- average the last five inputs in local memory
 g = withEnvM getEnv $ do
-    inp <- readCell @"int"
+    inp <- readInterCell @"int" @Int
     memoryIO $ putStrLn $ "g " ++ show inp
-    averaging <- readCell @"avgg"
+    averaging <- readInterCell @"avgg"
     let averaging' = take 5 (inp : averaging)
     let avg = sum averaging' `div` 5
-    writeCell @"avgg" averaging'
-    writeCell @"int2" avg
-    writeCell @"int3" avg
+    writeInterCell @"avgg" averaging'
+    writeInterCell @"int2" avg
+    writeInterCell @"int3" avg
 
 -- If the value surpasses a threshold, write 100; else write 0.
 h = withEnvM getEnv $ do
-    inp <- readCell @"int2"
+    inp <- readInterCell @"int2" @Int
     memoryIO $ putStrLn $ "h " ++ show inp
     let res = if inp > 5 then 100 else 0
     writeCell @"out" res
 
 -- If the value surpasses a threshold, write 100; else write 0.
 i = withEnvM getEnv $ do
-    inp <- readCell @"int3"
+    inp <- readInterCell @"int3" @Int
     memoryIO $ putStrLn $ "i " ++ show inp
     let res = if inp > 5 then 100 else 0
     writeCell @"out2" res
@@ -51,8 +51,8 @@ i = withEnvM getEnv $ do
 j = withEnvM getEnv $ do
     inp <- readCell @"in2"
     memoryIO $ putStrLn $ "j " ++ show inp
-    averaging <- readCell @"avgj"
+    averaging <- readInterCell @"avgj" @[Int]
     let averaging' = take 5 (fromIntegral inp : averaging)
     let avg = sum averaging' `div` 5
-    writeCell @"avgj" averaging'
+    writeInterCell @"avgj" averaging'
     writeCell @"out3" $ fromIntegral avg

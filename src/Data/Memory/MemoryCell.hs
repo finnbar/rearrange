@@ -4,17 +4,19 @@
 
 module Data.Memory.MemoryCell (
     readCell, writeCell,
+    readInterCell, writeInterCell,
     Cell(..), CellUpdate(..),
     updated, updatedInEnv
     ) where
 
-import Data.Memory.Types (Memory(..), Cell(..), CellUpdate(..), Set(..))
+import Data.Memory.Types (Memory(..), Cell(..), CellUpdate(..), Set(..), InterCell(..))
 import MonadRW
 
 import Foreign.Storable (Storable(poke, peek))
 import Foreign.Ptr (Ptr)
 import GHC.TypeLits
 import Data.Proxy
+import Data.IORef
 
 readCell :: forall s v t m. (MonadRW m v, Constr m v t) =>
     Memory m '( '[Cell v s t], '[] ) t
@@ -23,6 +25,12 @@ readCell = Mem $ \(Ext (Cell pt) Empty) -> readVar pt
 writeCell :: forall s v t m. (MonadRW m v, Constr m v t) =>
     t -> Memory m '( '[], '[Cell v s t] ) ()
 writeCell x = Mem $ \(Ext (Cell pt) Empty) -> writeVar pt x
+
+readInterCell :: forall s t. Memory IO '( '[InterCell s t], '[]) t
+readInterCell = Mem $ \(Ext (InterCell pt) Empty) -> readIORef pt
+
+writeInterCell :: forall s t. t -> Memory IO '( '[], '[InterCell s t]) ()
+writeInterCell x = Mem $ \(Ext (InterCell pt) Empty) -> writeIORef pt x
 
 updated :: forall s t v. KnownSymbol s => Cell v s t -> CellUpdate
 updated _ = AddrUpdate $ symbolVal (Proxy :: Proxy s)

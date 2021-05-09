@@ -1,19 +1,21 @@
 {-# LANGUAGE UndecidableInstances, ExplicitForAll, FlexibleInstances,
-    FlexibleContexts, AllowAmbiguousTypes, ScopedTypeVariables #-}
+    FlexibleContexts, AllowAmbiguousTypes, ScopedTypeVariables, FunctionalDependencies #-}
 
 module Data.Memory.EnvUtil (
-    withEnv, withEnvM, growEnv
+    withEnv, withEnvM, AddInterCells(..), WithoutInters, GetEnvFromMems
 ) where
 
-import Data.Memory.Types (Cell(..), Memory, Set(..), Subset)
+import Data.Memory.Types (Cell(..), Memory, Set(..), Subset, InterCell(..))
 import MonadRW
 
 import GHC.TypeLits
-import Data.Type.Set (Union, Unionable, union, Proxy)
+import Data.Type.Set (Union, Unionable, union)
 import MonadVar (MonadNew(..))
 import Data.Default
+import Data.IORef
 
 type family LookupOne (env :: [*]) (x :: *) :: * where
+    LookupOne _ (InterCell s t) = InterCell s t
     LookupOne '[] x = TypeError (Text "Unable to find " :<>: ShowType x :<>:
         Text " in the provided environment." :$$:
         Text "Check whether it is present!")
@@ -34,19 +36,29 @@ withEnvM :: (rs ~ LookupSpecific env rs, ws ~ LookupSpecific env ws) =>
 withEnvM _ = id
 {-# INLINE withEnvM #-}
 
-class DefaultEnv env m where
-    defaultEnv :: m (Set env)
+class AddInterCells (env :: [k]) (env' :: [k]) | env' -> env where
+    addInterCells :: Set env -> IO (Set env')
 
-instance Monad m => DefaultEnv '[] m where
-    defaultEnv = return Empty
+instance AddInterCells '[] '[] where
+    addInterCells Empty = return Empty
 
-instance (DefaultEnv xs m, Monad m, MonadNew m v, Default t, MonadRW m v,
-    Constr m v t) => DefaultEnv (Cell v s t ': xs) m where
-        defaultEnv = do
-            x <- new def
-            Ext (Cell @s @t @m x) <$> defaultEnv
+instance {-# OVERLAPPING #-} AddInterCells xs xs' =>
+    AddInterCells (x ': xs) (x ': xs') where
+        addInterCells (Ext x xs) = Ext x <$> addInterCells xs
 
-growEnv :: forall env env' xs m.
-    (Union env xs ~ env', Unionable env xs, Monad m, DefaultEnv xs m) =>
-    Set env -> m (Set env')
-growEnv env = union env <$> defaultEnv @xs
+instance {-# OVERLAPPABLE #-} (AddInterCells xs xs', Default t) =>
+    AddInterCells xs (InterCell s t ': xs') where
+        addInterCells xs = do
+            cell <- InterCell @s @t <$> newIORef def
+            cells <- addInterCells xs
+            return $ Ext cell cells
+
+type family WithoutInters (xs :: [*]) :: [*] where
+    WithoutInters '[] = '[]
+    WithoutInters (InterCell _ _ ': xs) = WithoutInters xs
+    WithoutInters (x ': xs) = x ': WithoutInters xs
+
+type family GetEnvFromMems (xs :: [*]) :: [*] where
+    GetEnvFromMems '[] = '[]
+    GetEnvFromMems (Memory _ '(rs, ws) _ ': xs) =
+        Union rs (Union ws (GetEnvFromMems xs))

@@ -61,6 +61,13 @@ instance (KnownSymbol s, NeedsUpdate xs) =>
     needsUpdate Proxy a@(AddrUpdate st) =
         symbolVal (Proxy :: Proxy s) == st || needsUpdate (Proxy :: Proxy xs) a
 
+-- TODO maybe extract this functionality out into a GetSymbol class or something.
+
+instance (KnownSymbol s, NeedsUpdate xs) =>
+    NeedsUpdate (InterCell s t ': xs) where
+    needsUpdate Proxy a@(AddrUpdate st) =
+        symbolVal (Proxy :: Proxy s) == st || needsUpdate (Proxy :: Proxy xs) a
+
 class ReifyBool (b :: Bool) where
     reifyBool :: Proxy b -> Bool
 
@@ -77,5 +84,10 @@ instance UpdateEffects '[] where
 
 instance (KnownSymbol s, UpdateEffects xs)
     => UpdateEffects (Cell v s t ': xs) where
+    updateEffects Proxy tail = AddrUpdate (symbolVal (Proxy :: Proxy s)) :
+        updateEffects (Proxy :: Proxy xs) tail
+
+instance (KnownSymbol s, UpdateEffects xs)
+    => UpdateEffects (InterCell s t ': xs) where
     updateEffects Proxy tail = AddrUpdate (symbolVal (Proxy :: Proxy s)) :
         updateEffects (Proxy :: Proxy xs) tail

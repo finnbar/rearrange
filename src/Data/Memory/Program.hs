@@ -6,12 +6,13 @@ module Data.Memory.Program (
     runProgram, runProgramPartial, runParallelProgram, runParallelProgramPartial
 ) where
 
-import Data.Memory.Types (Set, Memory, CellUpdate) 
+import Data.Memory.Types (Set, Memory, CellUpdate, NoConflicts_) 
 import Data.Memory.RunMemory
 import Data.Memory.RunMemoryConc
 import Data.Type.TSort (ordered, OrderedConstraints)
 import Data.Type.ComponentSearch (toSortedComponents, SortedComponentsConstraints)
 import Data.Type.HList (HList(..), RearrangeList)
+import Data.Memory.EnvUtil
 
 import MonadVar (MonadNew(new))
 import Data.Default (Default(..))
@@ -24,17 +25,26 @@ data Prog m e = Prog {
 newtype ParallelProgram m e = ParallelProgram (Prog m e)
 newtype Program m e = Program (Prog m e)
 
--- TODO: this is where we need to expand env
-makeProgram :: (Monad m, OrderedConstraints mems mems') =>
+makeProgram :: (Monad m, OrderedConstraints mems mems', NoConflicts_ env) =>
     HList mems -> Set env -> m (Program mems' env)
 makeProgram mems env = do
     let mems' = ordered mems
     return $ Program $ Prog {mems = mems', ..}
 
-makeParallelProgram :: (Monad m, SortedComponentsConstraints mems mems' mems'') =>
-    HList mems -> Set env -> m (ParallelProgram mems'' env)
-makeParallelProgram mems env = do
+makeProgramInters :: (OrderedConstraints mems mems', AddInterCells env env',
+    env ~ WithoutInters env', env' ~ GetEnvFromMems mems, NoConflicts_ env') =>
+    HList mems -> Set env -> IO (Program mems' env')
+makeProgramInters mems en = do
+    let mems' = ordered mems
+    env <- addInterCells en
+    return $ Program $ Prog {mems = mems', ..}
+
+makeParallelProgram :: (SortedComponentsConstraints mems mems' mems'',
+    AddInterCells env env', env ~ WithoutInters env', env' ~ GetEnvFromMems mems, NoConflicts_ env') =>
+    HList mems -> Set env -> IO (ParallelProgram mems'' env')
+makeParallelProgram mems en = do
     let mems'' = toSortedComponents mems
+    env <- addInterCells en
     return $ ParallelProgram $ Prog {mems = mems'', ..}
 
 runProgram :: RunMems m xs env out =>

@@ -4,17 +4,15 @@
 module Data.Memory.Types (
     Memory(..), Cell(..), CellUpdate(..), IsMemory,
     Split(..), Set(..), Sort(..), MemoryUnion, MemoryPlus,
-    Subset(..), NoConflicts
+    Subset(..), NoConflicts, NoConflicts_, InterCell(..)
 ) where
-
--- Reexports some of effect-monad and provides application-specific nub, union
--- and a few others.
 
 import MonadRW (MonadRW(..))
 
 import Data.Type.Set
-import GHC.TypeLits (Symbol, CmpSymbol, TypeError, ErrorMessage(Text, (:$$:)))
+import GHC.TypeLits (Symbol, CmpSymbol, TypeError, ErrorMessage(..))
 import Data.Kind (Constraint)
+import Data.IORef
 
 newtype Memory (m :: * -> *) (s :: ([*], [*])) a =
     Mem { runMemory :: Set (MemoryUnion s) -> m a }
@@ -22,9 +20,15 @@ newtype Memory (m :: * -> *) (s :: ([*], [*])) a =
 data Cell (v :: * -> *) (s :: Symbol) t where
     Cell :: forall s t m v c. (Monad m, MonadRW m v, Constr m v t) => v t -> Cell v s t
 
+data InterCell (s :: Symbol) t where
+    InterCell :: forall s t. IORef t -> InterCell s t
+
 newtype CellUpdate = AddrUpdate String
 
 type instance Cmp (Cell v s t) (Cell v' s' t') = CmpSymbol s s'
+type instance Cmp (InterCell s t) (InterCell s' t') = CmpSymbol s s'
+type instance Cmp (Cell v s t) (InterCell s' t') = CmpSymbol s s'
+type instance Cmp (InterCell s t) (Cell v s' t') = CmpSymbol s s'
 
 -- Specific definitions of Union and IsSet for lists of Cells.
 
@@ -40,16 +44,24 @@ type family MemoryPlus (s :: ([*], [*])) (t :: ([*], [*])) :: ([*], [*]) where
 type family IsMemory (x :: ([*], [*])) :: Constraint where
     IsMemory '(s, t) = (IsSet s, IsSet t)
 
+type family GetSymbol (x :: *) :: Symbol where
+    GetSymbol (Cell v s t) = s
+    GetSymbol (InterCell s t) = s
+
+type family IfSameName (x :: Symbol) (y :: Symbol) (tru :: Constraint) (fals :: Constraint) :: Constraint where
+    IfSameName x x tru fals = tru
+    IfSameName x y tru fals = fals
+
 type family NoConflicts_ (t :: [*]) :: Constraint where
     NoConflicts_ '[] = ()
-    NoConflicts_ '[Cell v s t] = ()
-    NoConflicts_ (Cell v s t ': (Cell v s t ': e)) =
-        NoConflicts_ (Cell v s t ': e)
-    NoConflicts_ (Cell v s t ': (Cell v' s t' ': e)) =
-        TypeError (Text "Two named cells have different types or constructors."
-        :$$: Text "A named cell must always have the same type and constructor.")
-    NoConflicts_ (Cell v s t ': (Cell v' s' t' ': e)) =
-        NoConflicts_ (Cell v' s' t' ': e)
+    NoConflicts_ '[x] = ()
+    NoConflicts_ (x ': (x ': e)) =
+        NoConflicts_ (x ': e)
+    NoConflicts_ (x ': (y ': e)) =
+        IfSameName (GetSymbol x) (GetSymbol y)
+            (TypeError (Text "Names must uniquely define cells!"
+            :$$: ShowType x :<>: Text " and " :<>: ShowType y :<>: Text " fail this!"))
+            (NoConflicts_ (y ': e))
 
 type family NoConflicts (x :: ([*], [*])) :: Constraint where
     NoConflicts '(s, t) = NoConflicts_ (Union s t)
