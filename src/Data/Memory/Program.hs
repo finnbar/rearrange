@@ -31,8 +31,8 @@ makeProgram mems env = do
     let mems' = ordered mems
     return $ Program $ Prog {mems = mems', ..}
 
-makeProgramInters :: (OrderedConstraints mems mems', AddInterCells env env',
-    env ~ WithoutInters env', env' ~ GetEnvFromMems mems, NoConflicts_ env') =>
+makeProgramInters :: (OrderedConstraints mems mems',
+    AIC env env' mems, NoConflicts_ env') =>
     HList mems -> Set env -> IO (Program mems' env')
 makeProgramInters mems en = do
     let mems' = ordered mems
@@ -40,7 +40,7 @@ makeProgramInters mems en = do
     return $ Program $ Prog {mems = mems', ..}
 
 makeParallelProgram :: (SortedComponentsConstraints mems mems' mems'',
-    AddInterCells env env', env ~ WithoutInters env', env' ~ GetEnvFromMems mems, NoConflicts_ env') =>
+    AIC env env' mems, NoConflicts_ env') =>
     HList mems -> Set env -> IO (ParallelProgram mems'' env')
 makeParallelProgram mems en = do
     let mems'' = toSortedComponents mems

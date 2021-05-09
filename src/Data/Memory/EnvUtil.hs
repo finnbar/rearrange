@@ -2,7 +2,7 @@
     FlexibleContexts, AllowAmbiguousTypes, ScopedTypeVariables, FunctionalDependencies #-}
 
 module Data.Memory.EnvUtil (
-    withEnv, withEnvM, AddInterCells(..), WithoutInters, GetEnvFromMems
+    withEnv, withEnvM, AddInterCells(..), AIC, WithoutInters, GetEnvFromMems
 ) where
 
 import Data.Memory.Types (Cell(..), Memory, Set(..), Subset, InterCell(..))
@@ -35,6 +35,9 @@ withEnvM :: (rs ~ LookupSpecific env rs, ws ~ LookupSpecific env ws) =>
     m (Set env) -> Memory m '(rs, ws) a -> Memory m '(rs, ws) a
 withEnvM _ = id
 {-# INLINE withEnvM #-}
+
+type AIC env env' mems = (AddInterCells env env', env ~ WithoutInters env',
+    env' ~ GetEnvFromMems mems)
 
 class AddInterCells (env :: [k]) (env' :: [k]) | env' -> env where
     addInterCells :: Set env -> IO (Set env')
