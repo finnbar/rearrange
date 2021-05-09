@@ -42,7 +42,7 @@ runProgram :: RunMems m xs env out =>
 runProgram (Program Prog {..}) = runMems mems env
 
 runProgramPartial :: RunPartialMems m xs env =>
-    Program xs env -> [CellUpdate] -> m () -> m ()
+    Program xs env -> [CellUpdate] -> m ()
 runProgramPartial (Program Prog {..}) = runPartialMems mems env
 
 runParallelProgram :: RunMultiMems xs env =>

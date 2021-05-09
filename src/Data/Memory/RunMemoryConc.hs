@@ -49,7 +49,7 @@ instance (RunPartialMems IO t env, RunMultiPartialMems ts env) =>
     RunMultiPartialMems (HList t ': ts) env where
     rmpm mvars (x :+: xs) env upd fin = do
         mvar <- newEmptyMVar
-        forkFinally (runPartialMems x env upd (return ())) $ \_ -> putMVar mvar ()
+        forkFinally (runPartialMems x env upd) $ \_ -> putMVar mvar ()
         rmpm (mvar : mvars) xs env upd fin
 
 waitForAll :: [MVar a] -> IO () -> IO ()
