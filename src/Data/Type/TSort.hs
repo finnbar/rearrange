@@ -19,7 +19,7 @@ import GHC.TypeLits
 
 data Ordered :: Comp -> [*] -> Exp [*]
 type instance Eval (Ordered comp types) =
-        Eval (RunTopsort =<< NoOutputDependence =<< ToAdjacencyList comp types)
+    Eval (RunTopsort =<< NoOutputDependence =<< ToAdjacencyList comp types)
 
 data RunTopsort :: AdjacencyList -> Exp [*]
 type instance Eval (RunTopsort adj) =

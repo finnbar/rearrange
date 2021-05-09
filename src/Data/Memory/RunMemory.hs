@@ -15,60 +15,53 @@ import Data.Type.Set (Union)
 
 -- FULL UPDATE (run all memory functions)
 
-runMem :: Subset (MemoryUnion s) env => Memory m t s b -> Set env -> t -> m b
-runMem mem env l = runMemory mem l (subset env)
+runMem :: Subset (MemoryUnion s) env => Memory m s b -> Set env -> m b
+runMem mem env = runMemory mem (subset env)
 
-class RunMems m xs env locals out | xs env -> out, xs -> locals where
-    runMems :: HList xs -> Set env -> HList locals -> m (HList out)
+class RunMems m xs env out | xs env -> out where
+    runMems :: HList xs -> Set env -> m (HList out)
 
-instance Monad m => RunMems m '[] env '[] '[] where
-    runMems _ _ _ = return HNil
+instance Monad m => RunMems m '[] env '[] where
+    runMems _ _ = return HNil
 
-instance (Monad m, RunMems m xs env locals out, Subset (MemoryUnion s) env) =>
-    RunMems m (Memory m l s b ': xs) env (l ': locals) (b ': out) where
-        runMems (mem :+: mems) env (local :+: ls) = do
-            r <- runMem mem env local
-            rs <- runMems mems env ls
+instance (Monad m, RunMems m xs env out, Subset (MemoryUnion s) env) =>
+    RunMems m (Memory m s b ': xs) env (b ': out) where
+        runMems (mem :+: mems) env = do
+            r <- runMem mem env
+            rs <- runMems mems env
             return $ r :+: rs
 
 -- PARTIAL UPDATE (run memory functions only if the proxy input dictates it)
+-- TODO: need to return what was changed so that future partial updates get it right.
 
-class RunPartialMems m xs env locals | xs -> locals where
-    runPartialMems :: HList xs -> Set env -> HList locals ->
-        [CellUpdate] -> m () -> m ()
+class RunPartialMems m xs env where
+    runPartialMems :: HList xs -> Set env -> [CellUpdate] -> m () -> m ()
 
-instance RunPartialMems m '[] env '[] where
-    runPartialMems HNil _ _ _ finaliser = finaliser
+instance RunPartialMems m '[] env where
+    runPartialMems HNil _ _ finaliser = finaliser
 
 -- If the local memory is (), then we only need to run this if the inputs have
 -- changed.
-instance {-# OVERLAPPING #-} (Monad m, RunPartialMems m xs env locals, RequiresUpdate rs,
+instance {-# OVERLAPPING #-} (Monad m, RunPartialMems m xs env, NeedsUpdate rs,
     UpdateEffects ws, Subset (Union rs ws) env)
-    => RunPartialMems m (Memory m () '(rs, ws) c ': xs) env (() ': locals) where
-        runPartialMems (mem :+: mems) env (() :+: ls) partial fin =
-            if any (requiresUpdate (Proxy :: Proxy rs)) partial
+    => RunPartialMems m (Memory m '(rs, ws) c ': xs) env where
+        runPartialMems (mem :+: mems) env partial fin =
+            if any (needsUpdate (Proxy :: Proxy rs)) partial
             then do
-                res <- runMem mem env ()
-                runPartialMems mems env ls (updateEffects (Proxy :: Proxy ws) partial) fin
-            else runPartialMems mems env ls partial fin
+                res <- runMem mem env
+                runPartialMems mems env (updateEffects (Proxy :: Proxy ws) partial) fin
+            else runPartialMems mems env partial fin
 
--- If the local memory isn't (), then the local memory was likely updated and
--- as such we need to run the computation regardless.
-instance {-# OVERLAPPABLE #-} (Monad m, RunPartialMems m xs env locals, RequiresUpdate rs,
-    UpdateEffects ws, Subset (Union rs ws) env)
-    => RunPartialMems m (Memory m l '(rs, ws) c ': xs) env (l ': locals) where
-        runPartialMems (mem :+: mems) env (l :+: ls) partial fin = do
-            res <- runMem mem env l
-            runPartialMems mems env ls (updateEffects (Proxy :: Proxy ws) partial) fin
+class NeedsUpdate rs where
+    needsUpdate :: Proxy rs -> CellUpdate -> Bool
 
-class RequiresUpdate rs where
-    requiresUpdate :: Proxy rs -> CellUpdate -> Bool
+instance NeedsUpdate '[] where
+    needsUpdate _ _ = False
 
-instance RequiresUpdate '[] where
-    requiresUpdate _ _ = False
-
-instance (KnownSymbol s, RequiresUpdate xs) => RequiresUpdate (Cell v s t ': xs) where
-    requiresUpdate Proxy a@(AddrUpdate st) = symbolVal (Proxy :: Proxy s) == st || requiresUpdate (Proxy :: Proxy xs) a
+instance (KnownSymbol s, NeedsUpdate xs) =>
+    NeedsUpdate (Cell v s t ': xs) where
+    needsUpdate Proxy a@(AddrUpdate st) =
+        symbolVal (Proxy :: Proxy s) == st || needsUpdate (Proxy :: Proxy xs) a
 
 class UpdateEffects ws where
     updateEffects :: Proxy ws -> [CellUpdate] -> [CellUpdate]

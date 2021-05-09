@@ -1,5 +1,5 @@
 module Rearrange (
-    readCell, writeCell, memoryIO, unsafeMemoryIO, readLocal, writeLocal,
+    readCell, writeCell, memoryIO, unsafeMemoryIO,
     Memory(..), Cell(..), updated, updatedInEnv, hCombine, printCell, ifThenElse,
     printCells, PrintCells, toCell, toSet, distribute, HList(..),
     Effect(..), ordered, toSortedComponents, module DMP, withEnv,
@@ -8,7 +8,7 @@ module Rearrange (
 -- TODO: Fix up these imports to use Data.Memory.Types more, add in local stuff.
 -- Then write some computations that use local memory and test.
 
-import Data.Memory.Memory (memoryIO, unsafeMemoryIO, readLocal, writeLocal, ifThenElse)
+import Data.Memory.Memory (memoryIO, unsafeMemoryIO, ifThenElse)
 import Data.Memory.MemoryCell (readCell, writeCell, updated, updatedInEnv)
 import Data.Memory.Types (Memory(..), Cell(..))
 import Control.Effect (Effect(..))

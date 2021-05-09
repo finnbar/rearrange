@@ -16,70 +16,40 @@ import Data.Type.HList (HList(..), RearrangeList)
 import MonadVar (MonadNew(new))
 import Data.Default (Default(..))
 
-data Prog m e l = Prog {
+data Prog m e = Prog {
     mems :: HList m,
-    env :: Set e,
-    locals :: HList l
+    env :: Set e
 }
 
-newtype ParallelProgram m e l = ParallelProgram (Prog m e l)
-newtype Program m e l = Program (Prog m e l)
+newtype ParallelProgram m e = ParallelProgram (Prog m e)
+newtype Program m e = Program (Prog m e)
 
-class MakeLocals mems m locals | mems -> locals where
-    makeLocals :: HList mems -> m (HList locals)
-
-instance Monad m => MakeLocals '[] m '[] where
-    makeLocals _ = return HNil
-
-instance (Monad m, MakeLocals xs m ls, MakeLocals xss m lss) =>
-    MakeLocals (HList xs ': xss) m (HList ls ': lss) where
-        makeLocals (mems :+: memss) = do
-            rs <- makeLocals mems
-            rss <- makeLocals memss
-            return (rs :+: rss)
-
-instance (Monad m, MonadNew m v, MakeLocals xs m ls, Default a) =>
-    MakeLocals (Memory m (v a) cs b ': xs) m (v a ': ls) where
-        makeLocals (mem :+: mems) = do
-            r <- new def
-            rs <- makeLocals mems
-            return (r :+: rs)
-
-instance (Monad m, MakeLocals xs m ls) =>
-    MakeLocals (Memory m () cs b ': xs) m (() ': ls) where
-        makeLocals (mem :+: mems) = do
-            rs <- makeLocals mems
-            return (() :+: rs)
-
-makeProgram :: (Monad m, MakeLocals mems' m locals,
-    OrderedConstraints mems mems') =>
-    HList mems -> Set env -> m (Program mems' env locals)
+-- TODO: this is where we need to expand env
+makeProgram :: (Monad m, OrderedConstraints mems mems') =>
+    HList mems -> Set env -> m (Program mems' env)
 makeProgram mems env = do
     let mems' = ordered mems
-    locals <- makeLocals mems'
     return $ Program $ Prog {mems = mems', ..}
 
-makeParallelProgram :: (Monad m, MakeLocals mems'' m locals,
-    SortedComponentsConstraints mems mems' mems'') =>
-    HList mems -> Set env -> m (ParallelProgram mems'' env locals)
+makeParallelProgram :: (Monad m, SortedComponentsConstraints mems mems' mems'') =>
+    HList mems -> Set env -> m (ParallelProgram mems'' env)
 makeParallelProgram mems env = do
     let mems'' = toSortedComponents mems
-    locals <- makeLocals mems''
     return $ ParallelProgram $ Prog {mems = mems'', ..}
 
-runProgram :: (RunMems m xs env locals out) =>
-    Program xs env locals -> m (HList out)
-runProgram (Program Prog {..}) = runMems mems env locals
+runProgram :: RunMems m xs env out =>
+    Program xs env -> m (HList out)
+runProgram (Program Prog {..}) = runMems mems env
 
-runProgramPartial :: (RunPartialMems m xs env locals) =>
-    Program xs env locals -> [CellUpdate] -> m () -> m ()
-runProgramPartial (Program Prog {..}) = runPartialMems mems env locals
+runProgramPartial :: RunPartialMems m xs env =>
+    Program xs env -> [CellUpdate] -> m () -> m ()
+runProgramPartial (Program Prog {..}) = runPartialMems mems env
 
-runParallelProgram :: (RunMultiMems xs env locals) =>
-    ParallelProgram xs env locals -> IO ()
-runParallelProgram (ParallelProgram Prog {..}) = runMultiMems mems env locals
+runParallelProgram :: RunMultiMems xs env =>
+    ParallelProgram xs env -> IO ()
+runParallelProgram (ParallelProgram Prog {..}) = runMultiMems mems env
 
-runParallelProgramPartial :: (RunMultiPartialMems xs env locals) =>
-    ParallelProgram xs env locals -> [CellUpdate] -> IO () -> IO ()
+runParallelProgramPartial :: RunMultiPartialMems xs env =>
+    ParallelProgram xs env -> [CellUpdate] -> IO () -> IO ()
 runParallelProgramPartial (ParallelProgram Prog {..}) =
-    runMultiPartialMems mems env locals
+    runMultiPartialMems mems env

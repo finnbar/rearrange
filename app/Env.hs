@@ -22,6 +22,8 @@ getEnv = do
         toCell @"int" @Int (newIORef 0) :+:
         toCell @"int2" @Int (newIORef 0) :+:
         toCell @"int3" @Int (newIORef 0) :+:
+        toCell @"avgg" @[Int] (newIORef []) :+:
+        toCell @"avgj" @[Int] (newIORef []) :+:
         toCell @"in" inputCell :+:
         toCell @"out" outputCell :+:
         toCell @"in2" inputCell2 :+:

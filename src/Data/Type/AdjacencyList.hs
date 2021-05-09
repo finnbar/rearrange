@@ -33,9 +33,18 @@ type instance Eval (Nodes ((k :-> v) ': xs)) = k ': Eval (Nodes xs)
 
 data ToAdjacencyList :: Comp -> [*] -> Exp AdjacencyList
 type instance Eval (ToAdjacencyList comp nodes) =
-    Eval (Map (GetAdjacent comp nodes) nodes)
+    Eval (Map (GAdj comp nodes) nodes)
+
+data GAdj :: Comp -> [*] -> * -> Exp (Mapping * ([*], [*]))
+type instance Eval (GAdj comp nodes node) =
+    Eval (GetAdjacent comp (Without nodes node) node)
 
 data GetAdjacent :: Comp -> [*] -> * -> Exp (Mapping * ([*], [*]))
 type instance Eval (GetAdjacent comp nodes node) =
     node :-> '(Eval (Filter (comp node) nodes),
                Eval (Filter ((Flip comp) node) nodes))
+
+type family Without (xs :: [*]) (x :: *) :: [*] where
+    Without '[] x = '[]
+    Without (x ': xs) x = Without xs x
+    Without (x ': xs) y = x ': Without xs y

@@ -24,15 +24,13 @@ type family LookupSpecific (env :: [*]) (xs :: [*]) :: [*] where
     LookupSpecific env '[] = '[]
     LookupSpecific env (x ': xs) = LookupOne env x ': LookupSpecific env xs
 
-withEnv :: forall l m env rs ws a.
-    (rs ~ LookupSpecific env rs, ws ~ LookupSpecific env ws) =>
-    Set env -> Memory m l '(rs, ws) a -> Memory m l '(rs, ws) a
+withEnv :: (rs ~ LookupSpecific env rs, ws ~ LookupSpecific env ws) =>
+    Set env -> Memory m '(rs, ws) a -> Memory m '(rs, ws) a
 withEnv _ = id
 {-# INLINE withEnv #-}
 
-withEnvM :: forall l m env rs ws a.
-    (rs ~ LookupSpecific env rs, ws ~ LookupSpecific env ws) =>
-    m (Set env) -> Memory m l '(rs, ws) a -> Memory m l '(rs, ws) a
+withEnvM :: (rs ~ LookupSpecific env rs, ws ~ LookupSpecific env ws) =>
+    m (Set env) -> Memory m '(rs, ws) a -> Memory m '(rs, ws) a
 withEnvM _ = id
 {-# INLINE withEnvM #-}
 
