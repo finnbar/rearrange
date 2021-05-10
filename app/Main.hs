@@ -12,8 +12,6 @@ import Control.Monad
 
 foreign import ccall "cinput" cInput :: IO ()
 
--- TODO: NoConflicts invariant seems to not fire...
-
 main :: IO ()
 main = do
     let prog = F.f :+: F.g :+: F.h :+: F.i :+: F.j :+: HNil

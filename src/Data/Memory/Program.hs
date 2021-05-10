@@ -14,9 +14,6 @@ import Data.Type.ComponentSearch (toSortedComponents, SortedComponentsConstraint
 import Data.Type.HList (HList(..), RearrangeList)
 import Data.Memory.EnvUtil
 
-import MonadVar (MonadNew(new))
-import Data.Default (Default(..))
-
 data Prog m e = Prog {
     mems :: HList m,
     env :: Set e

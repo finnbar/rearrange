@@ -26,10 +26,12 @@ writeCell :: forall s v t m. (MonadRW m v, Constr m v t) =>
     t -> Memory m '( '[], '[Cell v s t] ) ()
 writeCell x = Mem $ \(Ext (Cell pt) Empty) -> writeVar pt x
 
-readInterCell :: forall s t. Memory IO '( '[InterCell s t], '[]) t
+readInterCell :: forall c s t. (c ~ InterCell s t) =>
+    Memory IO '( '[c], '[]) t
 readInterCell = Mem $ \(Ext (InterCell pt) Empty) -> readIORef pt
 
-writeInterCell :: forall s t. t -> Memory IO '( '[], '[InterCell s t]) ()
+writeInterCell :: forall c s t. (c ~ InterCell s t) =>
+    t -> Memory IO '( '[], '[c]) ()
 writeInterCell x = Mem $ \(Ext (InterCell pt) Empty) -> writeIORef pt x
 
 updated :: forall s t v. KnownSymbol s => Cell v s t -> CellUpdate
