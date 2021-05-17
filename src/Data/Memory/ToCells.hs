@@ -61,3 +61,7 @@ instance (Distribute m xs, Monad m) => Distribute m (m x ': xs) where
         ress <- distribute actions
         return $ res :+: ress
     {-# NOINLINE distribute #-}
+
+toEnv hlist = do
+    addrs <- distribute @IO hlist
+    return $ toSet addrs

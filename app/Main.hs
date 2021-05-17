@@ -3,20 +3,20 @@
 module Main where
 
 import Rearrange hiding ((>>=), (>>), return)
-import qualified Functions as F
-import Env (getEnv)
-
-import Foreign.Ptr
-import Data.IORef
-import Control.Monad
+import qualified ComplexExample as E
+import qualified Robot as R
 
 foreign import ccall "cinput" cInput :: IO ()
 
 main :: IO ()
-main = do
-    let prog = F.f :+: F.g :+: F.h :+: F.i :+: F.j :+: HNil
-    env <- getEnv
-    program <- makeParallelProgram prog env
+main = runRobot >> runComplex
+    
+runComplex :: IO ()
+runComplex = do
+    putStrLn "Running Complex Example"
+    putStrLn "======"
+    env <- E.getEnv
+    program <- makeParallelProgram E.prog env
     printCells env
     cInput
     runParallelProgram program
@@ -24,3 +24,17 @@ main = do
     cInput
     runParallelProgramPartial program
         [updatedInEnv @"in" env, updatedInEnv @"out" env] (printCells env)
+
+runRobot :: IO ()
+runRobot = do
+    putStrLn "Running Robot"
+    putStrLn "======"
+    env <- R.getEnv
+    program <- makeProgram R.prog env
+    printCells env
+    cInput
+    runProgram program
+    printCells env
+    cInput
+    runProgramPartial program [updatedInEnv @"motor" env]
+    printCells env
