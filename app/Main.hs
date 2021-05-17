@@ -9,7 +9,7 @@ import qualified Robot as R
 foreign import ccall "cinput" cInput :: IO ()
 
 main :: IO ()
-main = runRobot >> runComplex
+main = runRobot >> putStrLn "" >> runComplex
     
 runComplex :: IO ()
 runComplex = do

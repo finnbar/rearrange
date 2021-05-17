@@ -7,9 +7,10 @@ module Data.Type.ComponentSearch (
 import Data.Type.AdjacencyList
 import Data.Type.GraphUtils (ConnectedComponents)
 import Data.Type.Dependencies (IsLessThan)
-import Data.Type.HList (HList, TransformList(..), FlattenToHList)
+import Data.Type.HList (HList, FlattenToHList)
 import Data.Type.Utils (Contains, Foldl, NoDuplicates)
 import Data.Type.TSort (Ordered)
+import Data.Type.Rearrangement (Permute, permute)
 
 import Fcf
 
@@ -25,15 +26,15 @@ type instance Eval (RunComponentise adj) =
 
 type Components xs = Eval (Componentise IsLessThan xs)
 
-toComponents :: (TransformList xs xs',
+toComponents :: (Permute xs xs',
     xs' ~ FlattenToHList (Components xs)) =>
     HList xs -> HList xs'
-toComponents = transform
+toComponents = permute
 
 type MultiTopSort xs = Eval (Map (Ordered IsLessThan) xs)
-type SortedComponentsConstraints xs xs' xs'' = (TransformList xs xs'',
-    xs' ~ Components xs, xs'' ~ FlattenToHList (MultiTopSort xs'))
+type SortedComponentsConstraints xs xs' = (Permute xs xs',
+    xs' ~ FlattenToHList (MultiTopSort (Components xs)))
 
-toSortedComponents :: SortedComponentsConstraints xs xs' xs'' =>
-    HList xs -> HList xs''
-toSortedComponents = transform
+toSortedComponents :: SortedComponentsConstraints xs xs' =>
+    HList xs -> HList xs'
+toSortedComponents = permute

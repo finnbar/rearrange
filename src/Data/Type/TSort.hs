@@ -6,7 +6,8 @@ import Data.Type.Utils (NoDuplicates)
 import Data.Type.GraphUtils (DFS, EmptyAcc, SCCsFromTopsorted)
 import Data.Type.AdjacencyList
 import Data.Type.Dependencies (IsLessThan)
-import Data.Type.HList (HList, RearrangeList(..))
+import Data.Type.HList (HList)
+import Data.Type.Rearrangement (permute, Permute)
 
 import Fcf
 import GHC.TypeLits
@@ -63,8 +64,8 @@ type family FLS (xss :: [[*]]) :: [*] where
             Text "To allow compilation, break the loop somehow.")
 
 type OrderedConstraints xs xs' =
-    (RearrangeList xs xs', xs' ~ Eval (Ordered IsLessThan xs))
+    (Permute xs xs', xs' ~ Eval (Ordered IsLessThan xs))
 
 ordered :: OrderedConstraints xs xs' =>
     HList xs -> HList xs'
-ordered = rearrange
+ordered = permute

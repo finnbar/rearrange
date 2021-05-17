@@ -1,5 +1,5 @@
 {-# LANGUAGE FunctionalDependencies, FlexibleInstances, UndecidableInstances,
-    ScopedTypeVariables, RecordWildCards #-}
+    ScopedTypeVariables, RecordWildCards, FlexibleContexts #-}
 
 module Data.Memory.Program (
     ParallelProgram, Program, makeProgram, makeParallelProgram,
@@ -11,7 +11,7 @@ import Data.Memory.RunMemory
 import Data.Memory.RunMemoryConc
 import Data.Type.TSort (ordered, OrderedConstraints)
 import Data.Type.ComponentSearch (toSortedComponents, SortedComponentsConstraints)
-import Data.Type.HList (HList(..), RearrangeList)
+import Data.Type.HList (HList(..))
 import Data.Memory.EnvUtil
 
 data Prog m e = Prog {
@@ -36,9 +36,9 @@ makeProgramInters mems en = do
     env <- addInterCells en
     return $ Program $ Prog {mems = mems', ..}
 
-makeParallelProgram :: (SortedComponentsConstraints mems mems' mems'',
+makeParallelProgram :: (SortedComponentsConstraints mems mems',
     AIC env env' mems, NoConflicts_ env') =>
-    HList mems -> Set env -> IO (ParallelProgram mems'' env')
+    HList mems -> Set env -> IO (ParallelProgram mems' env')
 makeParallelProgram mems en = do
     let mems'' = toSortedComponents mems
     env <- addInterCells en

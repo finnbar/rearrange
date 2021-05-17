@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: cf82015e5030620169d381add0602d7a78e7829d9fd7a267fdf150b8ed81b934
+-- hash: 9b356d329ac95aef4ebddd0f75347088acdd70c77e66c62831c657bfaaa36d03
 
 name:           rearrange
 version:        0.1.0.0
@@ -40,6 +40,7 @@ library
       Data.Type.Dependencies
       Data.Type.GraphUtils
       Data.Type.HList
+      Data.Type.Rearrangement
       Data.Type.TSort
       Data.Type.Utils
       MonadRW
