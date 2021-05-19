@@ -1,8 +1,12 @@
+-- This module implements DFS and connected component search, which are used
+-- to implement more complex type-level algorithms.
+
 {-# LANGUAGE UndecidableInstances #-}
 
 module Data.Type.GraphUtils where
 
 import Data.Type.AdjacencyList
+    (GetEdges, GetInEdges, AdjacencyList)
 import Data.Type.Utils (Contains, Append, Foldl)
 
 import Fcf
@@ -14,7 +18,7 @@ type EmptyAcc' = '( '[], '[])
 
 type SearchFn = AdjacencyList -> * -> Exp [*]
 
--- A nice example of a stack-based DFS can be found here:
+-- A helpful example of a stack-based DFS can be found here:
 -- https://stackoverflow.com/questions/59965812/topological-sort-based-on-a-comparator-rather-than-a-graph
 data DFS :: SearchFn -> AdjacencyList -> * -> Acc -> Exp Acc
 type instance Eval (DFS search adj node '(stack, used)) =

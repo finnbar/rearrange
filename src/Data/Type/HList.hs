@@ -1,5 +1,7 @@
-{-# LANGUAGE UndecidableInstances, FlexibleInstances, ScopedTypeVariables,
-    FunctionalDependencies, FlexibleContexts #-}
+-- This module implements the common HList structure, along with a few helper
+-- functions.
+
+{-# LANGUAGE FlexibleInstances, UndecidableInstances #-}
 
 module Data.Type.HList (
     HList(..),
@@ -8,9 +10,6 @@ module Data.Type.HList (
     ) where
 
 import Data.Type.Utils (Combine)
-import GHC.TypeLits
-import Data.Kind
-import Data.Proxy
 
 -- The HList structure.
 
@@ -37,20 +36,6 @@ hHead (x :+: _) = x
 
 hTail :: HList (x ': xs) -> HList xs
 hTail (_ :+: xs) = xs
-
-
--- RunComponents, which is a restricted version of map.
-
-class RunComponents xs a where
-    runComponents :: (a -> IO ()) -> HList xs -> IO ()
-
-instance RunComponents '[] a where
-    runComponents _ HNil = return ()
-
-instance RunComponents xs a => RunComponents (a ': xs) a where
-    runComponents f (x :+: xs) = do
-        f x
-        runComponents f xs
 
 -- FlattenToHList, which removes a layer of nesting by using HLists.
 

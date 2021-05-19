@@ -27,6 +27,6 @@ int* outputCell3() {
 }
 
 void cinput() {
-    int x = scanf("%d", &input);
-    x = scanf("%d", &input2);
+    printf("Please type in two numbers separated by a space as the two inputs.\n");
+    int x = scanf("%d %d", &input, &input2);
 }

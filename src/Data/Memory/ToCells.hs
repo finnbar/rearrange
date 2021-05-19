@@ -1,3 +1,6 @@
+-- This module provides functionality for making Cells from mutable memory
+-- locations, as well as some helper functions for building environments.
+
 {-# LANGUAGE FlexibleInstances, RankNTypes, ScopedTypeVariables,
     FlexibleContexts, UndecidableInstances #-}
 
@@ -6,11 +9,9 @@ module Data.Memory.ToCells where
 import MonadRW
 
 import Data.Memory.Types
-import Data.Type.HList
-import Foreign.Storable
-import Foreign.Ptr
+import Data.Type.HList (HList(..))
 import GHC.TypeLits (Symbol, KnownSymbol, symbolVal)
-import Data.Proxy
+import Data.Proxy (Proxy(Proxy))
 import Data.Type.Set hiding (Proxy)
 
 toCell :: forall (s :: Symbol) t m v c. (Monad m, MonadRW m v, Constr m v t)
@@ -33,7 +34,7 @@ instance (PrintCells xs, KnownSymbol s, MonadRW IO v, Constr IO v t, Show t) =>
         printCells (Ext x xs) = printCell x >> printCells xs
 
 toSet :: (Sortable s, Nubable (Sort s), ToSet s) =>
-    HList s -> Set (Nub (Sort s))
+    HList s -> Set (AsSet s)
 toSet l = asSet $ toSet_ l
 
 class ToSet xs where

@@ -1,5 +1,8 @@
-{-# LANGUAGE FunctionalDependencies, FlexibleInstances, UndecidableInstances,
-    ScopedTypeVariables, RecordWildCards, FlexibleContexts #-}
+-- This module defines Program and ParallelProgram, which group memory
+-- computations and the environment they run in, as well as resolving their
+-- dependencies at type level.
+
+{-# LANGUAGE FunctionalDependencies, RecordWildCards, FlexibleContexts #-}
 
 module Data.Memory.Program (
     ParallelProgram, Program, makeProgram, makeParallelProgram,
@@ -7,12 +10,12 @@ module Data.Memory.Program (
 ) where
 
 import Data.Memory.Types (Set, Memory, CellUpdate, NoConflicts_) 
-import Data.Memory.RunMemory
+import Data.Memory.RunMemory (RunPartialMems(..), RunMems(..))
 import Data.Memory.RunMemoryConc
 import Data.Type.TSort (ordered, OrderedConstraints)
 import Data.Type.ComponentSearch (toSortedComponents, SortedComponentsConstraints)
 import Data.Type.HList (HList(..))
-import Data.Memory.EnvUtil
+import Data.Memory.EnvUtil (AIC, AddInterCells(addInterCells))
 
 data Prog m e = Prog {
     mems :: HList m,

@@ -8,6 +8,10 @@ import qualified Robot as R
 
 foreign import ccall "cinput" cInput :: IO ()
 
+-- This just runs our two examples in order.
+-- Note that both utilise some foreign memory cells, and as such use a foreign
+-- call `cInput` to update those memory cells.
+
 main :: IO ()
 main = runRobot >> putStrLn "" >> runComplex
     

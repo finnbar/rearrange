@@ -1,4 +1,7 @@
-{-# LANGUAGE UndecidableInstances, AllowAmbiguousTypes, ExplicitForAll, FlexibleContexts #-}
+-- This module defines the graded monad (Effect) instance for Memory, along
+-- with a way to debug Memory computations (memoryIO).
+
+{-# LANGUAGE UndecidableInstances, FlexibleContexts #-}
 
 module Data.Memory.Memory (
     Memory(..), Cell(..),
@@ -28,7 +31,7 @@ instance P.Monad m => Effect (Memory m) where
         Mem $ \fg -> let (f, g) = split fg
                       in e f P.>>= \x -> (runMemory . k) x g
 
--- Rebindable syntax is making life annoying.
+-- Allows for if statements in RebindableSyntax.
 ifThenElse :: Bool -> a -> a -> a
 ifThenElse True a _ = a
 ifThenElse False _ a = a

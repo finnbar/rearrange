@@ -10,11 +10,12 @@ import qualified Prelude as P
 import Foreign.Ptr (Ptr)
 import Foreign.C.Types (CInt)
 
--- MORE COMPLEX EXAMPLE
 -- This is an example built to match the hypergraph present in Figure 1.
 -- It also uses the InterCell functionality mentioned at the end of Section 5,
 -- along with `withEnvM`.
 -- Note how every type signature is inferred.
+-- The main purpose of this example is to show type inference in different
+-- cases, and as such isn't much of a "real world" example.
 
 type Interm = InterCell "int" Int
 type Avgg = InterCell "avgg" [Int]
@@ -37,7 +38,7 @@ getEnv = toEnv $ toCell @"in" inputCell :+:
     toCell @"out3" outputCell3 :+: HNil
 
 -- "normalise the input signal"
--- for this we just divide by 10, but any arbitrary function will do.
+-- for this we just divide by 2, but any arbitrary function will do.
 f = withEnvM getEnv $ do
     inp <- readCell @"in"
     memoryIO $ putStrLn $ "f " ++ show inp
@@ -70,6 +71,7 @@ i = withEnvM getEnv $ do
     let res = if inp > 5 then 100 else 0
     writeCell @"out2" res
 
+-- average the last five inputs in local memory
 j = withEnvM getEnv $ do
     inp <- readCell @"in2"
     memoryIO $ putStrLn $ "j " ++ show inp

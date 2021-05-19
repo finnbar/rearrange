@@ -1,9 +1,11 @@
+-- This module implements type-level adjacency lists.
+
 {-# LANGUAGE UndecidableInstances #-}
 
 module Data.Type.AdjacencyList where
 
 import Data.Type.Map (Mapping(..))
-import Data.Type.Utils (CombinePair)
+import Data.Type.Utils (CombinePair, Without)
 
 import GHC.TypeLits
 import Fcf
@@ -43,8 +45,3 @@ data GetAdjacent :: Comp -> [*] -> * -> Exp (Mapping * ([*], [*]))
 type instance Eval (GetAdjacent comp nodes node) =
     node :-> '(Eval (Filter (comp node) nodes),
                Eval (Filter ((Flip comp) node) nodes))
-
-type family Without (xs :: [*]) (x :: *) :: [*] where
-    Without '[] x = '[]
-    Without (x ': xs) x = Without xs x
-    Without (x ': xs) y = x ': Without xs y

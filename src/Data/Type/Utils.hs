@@ -1,3 +1,4 @@
+-- A module containing type-level functions used in the rest of the code.
 {-# LANGUAGE UndecidableInstances, PolyKinds #-}
 
 module Data.Type.Utils where
@@ -33,19 +34,12 @@ type family Append (x :: k) (xs :: [k]) :: [k] where
     Append x '[] = '[x]
     Append x (y ': ys) = y ': Append x ys
 
-type family HasDuplicates (xs :: [*]) :: Bool where
-    HasDuplicates '[] = False
-    HasDuplicates (x ': xs) = Or (Contains x xs) (HasDuplicates xs)
-
-type family NoDuplicates (xs :: [*]) :: Constraint where
-    NoDuplicates xs = NoDuplicatesHelper xs (HasDuplicates xs)
-
-type family NoDuplicatesHelper (xs :: [*]) (c :: Bool) :: Constraint where
-    NoDuplicatesHelper xs 'False = ()
-    NoDuplicatesHelper xs 'True  =
-        TypeError (Text "The list " :<>: ShowType xs :<>: Text " should not contain duplicates!")
-
 data Foldl :: (b -> a -> Exp b) -> b -> t a -> Exp b
 type instance Eval (Foldl f acc '[]) = acc
 type instance Eval (Foldl f acc (x ': xs)) =
     Eval (Foldl f (Eval (f acc x)) xs)
+
+type family Without (xs :: [*]) (x :: *) :: [*] where
+    Without '[] x = '[]
+    Without (x ': xs) x = Without xs x
+    Without (x ': xs) y = x ': Without xs y

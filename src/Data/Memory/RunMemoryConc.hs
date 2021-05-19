@@ -1,13 +1,14 @@
-{-# LANGUAGE FlexibleInstances, FlexibleContexts, UndecidableInstances,
-    ScopedTypeVariables, FunctionalDependencies #-}
+-- This module runs groups of computations in parallel.
+
+{-# LANGUAGE FlexibleInstances, FlexibleContexts, UndecidableInstances #-}
 
 module Data.Memory.RunMemoryConc (
     runMultiMems, RunMultiMems(..),
     runMultiPartialMems, RunMultiPartialMems(..)
 ) where
 
-import Data.Type.HList
-import Data.Memory.RunMemory
+import Data.Type.HList (HList(..))
+import Data.Memory.RunMemory (RunPartialMems(..), RunMems(..))
 import Data.Memory.Types (CellUpdate(..), Set(..))
 
 import Control.Concurrent (forkFinally)

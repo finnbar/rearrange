@@ -1,10 +1,13 @@
+-- This module defines all of the relevant types for working with memory, and
+-- reexports part of Data.Type.Set.
+
 {-# LANGUAGE ExplicitForAll, FlexibleInstances, FlexibleContexts,
     UndecidableInstances, AllowAmbiguousTypes #-}
 
 module Data.Memory.Types (
     Memory(..), Cell(..), CellUpdate(..), IsMemory,
-    Split(..), Set(..), Sort(..), MemoryUnion, MemoryPlus,
-    Subset(..), NoConflicts, NoConflicts_, InterCell(..)
+    Split(..), Set(..), Sort(..), MemoryUnion, MemoryPlus, MemoryWrites,
+    Subset(..), NoConflicts, NoConflicts_, InterCell(..), GetSymbol
 ) where
 
 import MonadRW (MonadRW(..))
@@ -12,10 +15,13 @@ import MonadRW (MonadRW(..))
 import Data.Type.Set
 import GHC.TypeLits (Symbol, CmpSymbol, TypeError, ErrorMessage(..))
 import Data.Kind (Constraint)
-import Data.IORef
+import Data.IORef (IORef)
 
 newtype Memory (m :: * -> *) (s :: ([*], [*])) a =
     Mem { runMemory :: Set (MemoryUnion s) -> m a }
+
+type family MemoryWrites x :: [*] where
+    MemoryWrites (Memory m '(rs, ws) a) = ws
 
 data Cell (v :: * -> *) (s :: Symbol) t where
     Cell :: forall s t m v c. (Monad m, MonadRW m v, Constr m v t) => v t -> Cell v s t
@@ -47,8 +53,11 @@ type family IsMemory (x :: ([*], [*])) :: Constraint where
 type family GetSymbol (x :: *) :: Symbol where
     GetSymbol (Cell v s t) = s
     GetSymbol (InterCell s t) = s
+    GetSymbol x = TypeError (Text "Cannot get the symbol of " :<>: ShowType x
+        :$$: Text "It must be a Cell or InterCell!")
 
-type family IfSameName (x :: Symbol) (y :: Symbol) (tru :: Constraint) (fals :: Constraint) :: Constraint where
+type family IfSameName (x :: Symbol) (y :: Symbol) (tru :: Constraint)
+        (fals :: Constraint) :: Constraint where
     IfSameName x x tru fals = tru
     IfSameName x y tru fals = fals
 

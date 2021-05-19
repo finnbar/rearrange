@@ -1,13 +1,14 @@
-{-# LANGUAGE UndecidableInstances, FlexibleInstances, AllowAmbiguousTypes, ExplicitForAll,
-    FunctionalDependencies, FlexibleContexts, ScopedTypeVariables, TypeApplications #-}
+-- This module implements rearrangements (section 4), the key idea behind
+-- reifying our type-level algorithms more easily.
+
+{-# LANGUAGE UndecidableInstances, FlexibleInstances, FunctionalDependencies,
+    FlexibleContexts #-}
 
 module Data.Type.Rearrangement (
     rearrangeDel, RearrangeDel, permute, Permute, Rearrange(..)
 ) where
 
-import Data.Type.HList
-
--- First pass - specialised to HLists.
+import Data.Type.HList (HList(..))
 
 rearrangeDel :: RearrangeDel env target env' => HList env -> HList target
 rearrangeDel = fst . rDel
@@ -15,6 +16,8 @@ rearrangeDel = fst . rDel
 type Permute env target = RearrangeDel env target '[]
 permute :: Permute env target => HList env -> HList target
 permute = rearrangeDel
+
+-- RearrangeDel, which performs rearrangement with deletion.
 
 class RearrangeDel env target env' | env target -> env' where
     rDel :: HList env -> (HList target, HList env')
@@ -33,6 +36,8 @@ instance {-# OVERLAPPING #-} (RearrangeDel env head env', RearrangeDel env' targ
         rDel l = (head' :+: tail', l'')
             where (head', l') = rDel l
                   (tail', l'') = rDel l'
+
+-- Rearrange, which performs rearrangement with deletion.
 
 class Rearrange env target where
     rearrange :: HList env -> HList target

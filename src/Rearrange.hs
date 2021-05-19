@@ -1,12 +1,10 @@
+-- A simple module reexporting everything for end-user use.
 module Rearrange (
-    readCell, writeCell, memoryIO, unsafeMemoryIO, readInterCell, writeInterCell,
-    Memory(..), Cell(..), InterCell(..), updated, updatedInEnv, hCombine, printCell, ifThenElse,
-    printCells, PrintCells, toCell, toSet, distribute, HList(..), toEnv,
-    Effect(..), ordered, toSortedComponents, module DMP, withEnv,
-    withEnvM) where
-
--- TODO: Fix up these imports to use Data.Memory.Types more, add in local stuff.
--- Then write some computations that use local memory and test.
+    readCell, writeCell, memoryIO, unsafeMemoryIO, readInterCell,
+    writeInterCell, Memory(..), Cell(..), InterCell(..), updated,
+    updatedInEnv, hCombine, printCell, ifThenElse, printCells, PrintCells,
+    toCell, toSet, distribute, HList(..), toEnv, Effect(..), ordered,
+    toSortedComponents, module DMP, withEnv, withEnvM) where
 
 import Data.Memory.Memory (memoryIO, unsafeMemoryIO, ifThenElse)
 import Data.Memory.MemoryCell (readCell, writeCell, readInterCell, writeInterCell, updated, updatedInEnv)

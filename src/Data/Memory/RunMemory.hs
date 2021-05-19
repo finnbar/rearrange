@@ -1,3 +1,6 @@
+-- This module runs groups of computations serially, and also does partial
+-- updates for serial groups of computations.
+
 {-# LANGUAGE FlexibleInstances, FlexibleContexts, UndecidableInstances,
     ScopedTypeVariables, FunctionalDependencies #-}
 
@@ -56,15 +59,8 @@ class NeedsUpdate rs where
 instance NeedsUpdate '[] where
     needsUpdate _ _ = False
 
-instance (KnownSymbol s, NeedsUpdate xs) =>
-    NeedsUpdate (Cell v s t ': xs) where
-    needsUpdate Proxy a@(AddrUpdate st) =
-        symbolVal (Proxy :: Proxy s) == st || needsUpdate (Proxy :: Proxy xs) a
-
--- TODO maybe extract this functionality out into a GetSymbol class or something.
-
-instance (KnownSymbol s, NeedsUpdate xs) =>
-    NeedsUpdate (InterCell s t ': xs) where
+instance (KnownSymbol s, NeedsUpdate xs, s ~ GetSymbol x) =>
+    NeedsUpdate (x ': xs) where
     needsUpdate Proxy a@(AddrUpdate st) =
         symbolVal (Proxy :: Proxy s) == st || needsUpdate (Proxy :: Proxy xs) a
 
@@ -82,12 +78,7 @@ class UpdateEffects ws where
 instance UpdateEffects '[] where
     updateEffects Proxy tail = tail
 
-instance (KnownSymbol s, UpdateEffects xs)
-    => UpdateEffects (Cell v s t ': xs) where
-    updateEffects Proxy tail = AddrUpdate (symbolVal (Proxy :: Proxy s)) :
-        updateEffects (Proxy :: Proxy xs) tail
-
-instance (KnownSymbol s, UpdateEffects xs)
-    => UpdateEffects (InterCell s t ': xs) where
+instance (KnownSymbol s, UpdateEffects xs, s ~ GetSymbol x)
+    => UpdateEffects (x ': xs) where
     updateEffects Proxy tail = AddrUpdate (symbolVal (Proxy :: Proxy s)) :
         updateEffects (Proxy :: Proxy xs) tail

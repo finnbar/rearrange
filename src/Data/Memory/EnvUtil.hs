@@ -1,18 +1,22 @@
-{-# LANGUAGE UndecidableInstances, ExplicitForAll, FlexibleInstances,
-    FlexibleContexts, AllowAmbiguousTypes, ScopedTypeVariables, FunctionalDependencies #-}
+-- This module implements withEnvM (unifying the types in the environment with
+-- the types in the computation to reduce the need for type annotations) and
+-- the automatic allocation of InterCells (to avoid having to state them in the
+-- environment).
+
+{-# LANGUAGE UndecidableInstances, FlexibleInstances, AllowAmbiguousTypes,
+    ScopedTypeVariables, FunctionalDependencies #-}
 
 module Data.Memory.EnvUtil (
     withEnv, withEnvM, AddInterCells(..), AIC, WithoutInters, GetEnvFromMems
 ) where
 
 import Data.Memory.Types (Cell(..), Memory, Set(..), Subset, InterCell(..))
-import MonadRW
 
 import GHC.TypeLits
 import Data.Type.Set (Union, Unionable, union)
 import MonadVar (MonadNew(..))
-import Data.Default
-import Data.IORef
+import Data.Default (Default(..))
+import Data.IORef (newIORef)
 
 type family LookupOne (env :: [*]) (x :: *) :: * where
     LookupOne _ (InterCell s t) = InterCell s t

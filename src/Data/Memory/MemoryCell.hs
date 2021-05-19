@@ -1,6 +1,8 @@
-{-# LANGUAGE RankNTypes, UndecidableInstances, FlexibleInstances,
-    ScopedTypeVariables, AllowAmbiguousTypes, FunctionalDependencies,
-    FlexibleContexts #-}
+-- This module defines the functions for reading and writing to Cells, and for
+-- defining partial updates.
+
+{-# LANGUAGE UndecidableInstances, FlexibleInstances, ScopedTypeVariables,
+    AllowAmbiguousTypes, FunctionalDependencies, FlexibleContexts #-}
 
 module Data.Memory.MemoryCell (
     readCell, writeCell,

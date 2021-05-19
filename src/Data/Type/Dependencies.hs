@@ -1,3 +1,6 @@
+-- This module defines dependencies between two computations, and errors if a
+-- dependency loop is found.
+
 {-# LANGUAGE UndecidableInstances #-}
 
 module Data.Type.Dependencies (
@@ -12,7 +15,6 @@ import Data.Type.Utils (NonEmptyIntersect)
 import GHC.TypeLits
 import Fcf
 
--- Why are we not using something from Prelude?
 data PartialOrder = DLT | DGT | NOT
 
 data IsLessThan :: * -> * -> Exp Bool

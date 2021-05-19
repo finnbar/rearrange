@@ -1,5 +1,7 @@
-{-# LANGUAGE AllowAmbiguousTypes, ConstraintKinds,
-    FlexibleInstances #-}
+-- This module is for MonadRW, a generalisation of MonadRead and MonadWrite to
+-- allow for constraints.
+
+{-# LANGUAGE AllowAmbiguousTypes, ConstraintKinds, FlexibleInstances #-}
 
 module MonadRW (
     MonadRW(..)
@@ -15,11 +17,6 @@ import Data.IORef (IORef, readIORef, writeIORef)
 import Control.Monad.ST (ST)
 import Data.STRef (STRef, readSTRef, writeSTRef)
 import Control.Monad.IO.Class (MonadIO(..), liftIO)
-
--- This module is for MonadRW, a generalisation of MonadRead and MonadWrite to
--- allow for constraints. It would have been nice to provide an instance that
--- just takes the relevant instances from MonadRead and MonadWrite, but that
--- has issues with functional dependences.
 
 class MonadRW (m :: * -> *) (v :: * -> *) where
     type Constr m v a :: Constraint

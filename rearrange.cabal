@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 9b356d329ac95aef4ebddd0f75347088acdd70c77e66c62831c657bfaaa36d03
+-- hash: c99523e056b880b3899816ab71a8142e273100bc2b88c3b6101d6030a76e8e4e
 
 name:           rearrange
 version:        0.1.0.0
@@ -45,7 +45,6 @@ library
       Data.Type.Utils
       MonadRW
       Rearrange
-      Testing
   other-modules:
       Paths_rearrange
   hs-source-dirs:
