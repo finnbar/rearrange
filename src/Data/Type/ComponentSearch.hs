@@ -1,7 +1,8 @@
 -- This module implements weakly connected component search and brings it to
 -- the value-level via rearrangements.
 
-{-# LANGUAGE UndecidableInstances, FlexibleContexts #-}
+{-# LANGUAGE UndecidableInstances, FlexibleContexts, AllowAmbiguousTypes,
+    ExplicitForAll #-}
 
 module Data.Type.ComponentSearch (
     toComponents, toSortedComponents, SortedComponentsConstraints
@@ -10,9 +11,8 @@ module Data.Type.ComponentSearch (
 import Data.Type.AdjacencyList
     (ToAdjacencyList, Nodes, Comp, AdjacencyList)
 import Data.Type.GraphUtils (ConnectedComponents)
-import Data.Type.Dependencies (IsLessThan)
 import Data.Type.HList (HList, FlattenToHList)
-import Data.Type.TSort (Ordered, NoOutputDependence)
+import Data.Type.TSort (Ordered)
 import Data.Type.Rearrangement (Permute, permute)
 
 import Fcf
@@ -27,20 +27,19 @@ data RunComponentise :: AdjacencyList -> Exp [[*]]
 type instance Eval (RunComponentise adj) =
     Eval (ConnectedComponents adj (Eval (Nodes adj)))
 
-type Components xs = Eval (Componentise IsLessThan xs)
+type Components c xs = Eval (Componentise c xs)
 
 -- Connected components without topological sorting.
-toComponents :: (Permute xs xs',
-    xs' ~ FlattenToHList (Components xs)) =>
+toComponents :: forall c xs xs' . (Permute xs xs',
+    xs' ~ FlattenToHList (Components c xs)) =>
     HList xs -> HList xs'
 toComponents = permute
 
-type MultiTopSort xs = Eval (Map (Ordered IsLessThan) xs)
-type SortedComponentsConstraints xs xs' = (Permute xs xs',
-    xs' ~ FlattenToHList (MultiTopSort (Components xs)),
-    Eval (NoOutputDependence xs))
+type MultiTopSort c xs = Eval (Map (Ordered c) xs)
+type SortedComponentsConstraints c xs xs' = (Permute xs xs',
+    xs' ~ FlattenToHList (MultiTopSort c (Components c xs)))
 
 -- Connected components with topological sorting.
-toSortedComponents :: SortedComponentsConstraints xs xs' =>
+toSortedComponents :: forall c xs xs'. SortedComponentsConstraints c xs xs' =>
     HList xs -> HList xs'
 toSortedComponents = permute

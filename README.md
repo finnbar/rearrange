@@ -18,7 +18,7 @@ Code corresponding to Sections 3 and 4 can be found in:
 * Data.Type.ComponentSearch (like TSort, but for component search)
 
 Code corresponding to Section 5 can be found in:
-* Data.Type.Dependencies (IsLessThan, which finds data flow dependencies between memory computations)
+* Data.Memory.Dependencies (IsLessThan and NoOutputDependence)
 * Data.Memory.RunMemory (runs Memory computations serially)
 * Data.Memory.RunMemoryConc (runs Memory computations concurrently)
 * Data.Memory.ToCells (functions for building Cells and thus environments)

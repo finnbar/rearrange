@@ -16,6 +16,7 @@ import Data.Type.TSort (ordered, OrderedConstraints)
 import Data.Type.ComponentSearch (toSortedComponents, SortedComponentsConstraints)
 import Data.Type.HList (HList(..))
 import Data.Memory.EnvUtil (AIC, AddInterCells(addInterCells))
+import Data.Memory.Dependencies (IsLessThan, NoOutputDep)
 
 data Prog m e = Prog {
     mems :: HList m,
@@ -25,25 +26,26 @@ data Prog m e = Prog {
 newtype ParallelProgram m e = ParallelProgram (Prog m e)
 newtype Program m e = Program (Prog m e)
 
-makeProgram :: (Monad m, OrderedConstraints mems mems', NoConflicts_ env) =>
+makeProgram :: (Monad m, OrderedConstraints IsLessThan mems mems',
+    NoConflicts_ env, NoOutputDep mems) =>
     HList mems -> Set env -> m (Program mems' env)
 makeProgram mems env = do
-    let mems' = ordered mems
+    let mems' = ordered @IsLessThan mems
     return $ Program $ Prog {mems = mems', ..}
 
-makeProgramInters :: (OrderedConstraints mems mems',
-    AIC env env' mems, NoConflicts_ env') =>
+makeProgramInters :: (OrderedConstraints IsLessThan mems mems',
+    AIC env env' mems, NoConflicts_ env', NoOutputDep mems) =>
     HList mems -> Set env -> IO (Program mems' env')
 makeProgramInters mems en = do
-    let mems' = ordered mems
+    let mems' = ordered @IsLessThan mems
     env <- addInterCells en
     return $ Program $ Prog {mems = mems', ..}
 
-makeParallelProgram :: (SortedComponentsConstraints mems mems',
-    AIC env env' mems, NoConflicts_ env') =>
+makeParallelProgram :: (SortedComponentsConstraints IsLessThan mems mems',
+    AIC env env' mems, NoConflicts_ env', NoOutputDep mems) =>
     HList mems -> Set env -> IO (ParallelProgram mems' env')
 makeParallelProgram mems en = do
-    let mems'' = toSortedComponents mems
+    let mems'' = toSortedComponents @IsLessThan mems
     env <- addInterCells en
     return $ ParallelProgram $ Prog {mems = mems'', ..}
 

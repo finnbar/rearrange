@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: c99523e056b880b3899816ab71a8142e273100bc2b88c3b6101d6030a76e8e4e
+-- hash: b6733910a9e23f3b6f62828c6a98d9c7c2c1c801a27b26ccd39131b0eeaf6e39
 
 name:           rearrange
 version:        0.1.0.0
@@ -27,6 +27,7 @@ source-repository head
 
 library
   exposed-modules:
+      Data.Memory.Dependencies
       Data.Memory.EnvUtil
       Data.Memory.Memory
       Data.Memory.MemoryCell
@@ -37,7 +38,6 @@ library
       Data.Memory.Types
       Data.Type.AdjacencyList
       Data.Type.ComponentSearch
-      Data.Type.Dependencies
       Data.Type.GraphUtils
       Data.Type.HList
       Data.Type.Rearrangement
