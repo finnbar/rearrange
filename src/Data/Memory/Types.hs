@@ -7,6 +7,7 @@
 module Data.Memory.Types (
     Memory(..), Cell(..), CellUpdate(..), IsMemory,
     Split(..), Set(..), Sort(..), MemoryUnion, MemoryPlus, MemoryWrites,
+    MemoryReads,
     Subset(..), NoConflicts, NoConflicts_, InterCell(..), GetSymbol
 ) where
 
@@ -22,6 +23,9 @@ newtype Memory (m :: * -> *) (s :: ([*], [*])) a =
 
 type family MemoryWrites x :: [*] where
     MemoryWrites (Memory m '(rs, ws) a) = ws
+
+type family MemoryReads x :: [*] where
+    MemoryReads (Memory m '(rs, ws) a) = rs
 
 data Cell (v :: * -> *) (s :: Symbol) t where
     Cell :: forall s t m v c. (Monad m, MonadRW m v, Constr m v t) => v t -> Cell v s t

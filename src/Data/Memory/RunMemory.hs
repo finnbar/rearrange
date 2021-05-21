@@ -10,7 +10,7 @@ module Data.Memory.RunMemory (
 ) where
 
 import Data.Memory.Types
-import Data.Type.Utils (NonEmptyIntersect)
+import Data.Type.Utils (NonEmptyInt)
 
 import Data.Type.HList
 import GHC.TypeLits
@@ -44,7 +44,7 @@ instance Monad m => RunPartialMems m '[] env where
     runPartialMems HNil _ _ = return ()
 
 instance (Monad m, RunPartialMems m xs env, NeedsUpdate rs, ReifyBool b,
-    UpdateEffects ws, Subset (Union rs ws) env, b ~ NonEmptyIntersect rs ws)
+    UpdateEffects ws, Subset (Union rs ws) env, b ~ NonEmptyInt rs ws)
     => RunPartialMems m (Memory m '(rs, ws) c ': xs) env where
         runPartialMems (mem :+: mems) env partial =
             if any (needsUpdate (Proxy :: Proxy rs)) partial || reifyBool (Proxy :: Proxy b)

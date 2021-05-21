@@ -7,7 +7,7 @@ module Data.Type.GraphUtils where
 
 import Data.Type.AdjacencyList
     (GetEdges, GetInEdges, AdjacencyList)
-import Data.Type.Utils (Contains, Append, Foldl)
+import Data.Type.Utils (Elem, Append, Foldl)
 
 import Fcf
 
@@ -27,7 +27,7 @@ type instance Eval (DFS search adj node '(stack, used)) =
                 =<< Foldr (DFS search adj) '(stack, node ': used)
                 =<< search adj node)
             (Pure '(stack, used))
-            (Contains node used))
+            (Eval (Elem node used)))
 
 -- Once an expansion is done, add the node to the stack.
 data UpdateStack :: * -> Acc -> Exp Acc

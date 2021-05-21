@@ -3,29 +3,19 @@
 
 module Data.Type.Utils where
 
-import Data.Type.Set (MemberP)
-import GHC.TypeLits
-import Data.Kind
+import Fcf
 
-import Fcf (Exp, Eval)
+data Elem :: k -> [k] -> Exp Bool
+type instance Eval (Elem x '[]) = False
+type instance Eval (Elem x (y ': ys)) =
+  If (Eval (TyEq x y)) True (Eval (Elem x ys))
 
-type family Or (x :: Bool) (y :: Bool) :: Bool where
-    Or 'False 'False = 'False
-    Or x     y       = 'True
+type NonEmptyInt xs ys = Eval (NonEmptyIntersect xs ys)
+data NonEmptyIntersect :: [k] -> [k] -> Exp Bool
+type instance Eval (NonEmptyIntersect xs ys) =
+  Eval (Not =<< Null =<< Filter (Flip Elem xs) ys)
 
-type family NonEmptyIntersect (xs :: [k]) (ys :: [k]) :: Bool where
-    NonEmptyIntersect '[] ys       = 'False
-    NonEmptyIntersect xs '[]       = 'False
-    NonEmptyIntersect (x ': xs) ys = Or (MemberP x ys) (NonEmptyIntersect xs ys)
-
-type family Contains (x :: k) (xs :: [k]) :: Bool where
-    Contains x '[] = False
-    Contains x (x ': xs) = True
-    Contains x (y ': xs) = Contains x xs
-
-type family Combine (xs :: [*]) (ys :: [*]) :: [*] where
-    Combine '[] ys = ys
-    Combine (x ': xs) ys = x ': Combine xs ys
+type Combine xs ys = Eval (xs ++ ys)
 
 data CombinePair :: ([*], [*]) -> Exp [*]
 type instance Eval (CombinePair '(xs, ys)) = Combine xs ys

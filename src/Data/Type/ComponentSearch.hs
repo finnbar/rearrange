@@ -12,7 +12,6 @@ import Data.Type.AdjacencyList
 import Data.Type.GraphUtils (ConnectedComponents)
 import Data.Type.Dependencies (IsLessThan)
 import Data.Type.HList (HList, FlattenToHList)
-import Data.Type.Utils (Contains, Foldl)
 import Data.Type.TSort (Ordered, NoOutputDependence)
 import Data.Type.Rearrangement (Permute, permute)
 

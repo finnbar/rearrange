@@ -6,7 +6,7 @@
 
 module Data.Type.TSort where
 
-import Data.Type.Utils (Without, NonEmptyIntersect)
+import Data.Type.Utils (Without, NonEmptyInt)
 import Data.Type.GraphUtils (DFS, EmptyAcc, SCCsFromTopsorted)
 import Data.Type.AdjacencyList
 import Data.Type.Dependencies (IsLessThan)
@@ -63,9 +63,6 @@ data GetOutputDependence :: [*] -> * -> Exp Constraint
 type instance Eval (GetOutputDependence nodes node) =
     Eval (Constraints =<< Map (HasSameOutput node) (Without nodes node))
 
-data Debug :: k -> Exp Constraint
-type instance Eval (Debug k) = TypeError (ShowType k)
-
 data HasSameOutput :: * -> * -> Exp Constraint
 type instance Eval (HasSameOutput n n') =
     Eval (UnBool (Pure (() :: Constraint))
@@ -73,7 +70,7 @@ type instance Eval (HasSameOutput n n') =
         :$$: ShowType n' :$$: Text " share an output cell!" :$$:
         Text "This means that they have an output dependency and cannot be ordered."
         :$$: Text "Consider merging them into one computation to fix the ordering."))
-        (NonEmptyIntersect (MemoryWrites n) (MemoryWrites n')))
+        (NonEmptyInt (MemoryWrites n) (MemoryWrites n')))
 
 type OrderedConstraints xs xs' =
     (Permute xs xs', xs' ~ Eval (Ordered IsLessThan xs), Eval (NoOutputDependence xs))

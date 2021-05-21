@@ -27,7 +27,7 @@ runComplex = do
     printCells env
     cInput
     runParallelProgramPartial program
-        [updatedInEnv @"in" env, updatedInEnv @"out" env] (printCells env)
+        [updatedInEnv @"in" env] (printCells env)
 
 runRobot :: IO ()
 runRobot = do
