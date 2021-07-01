@@ -8,7 +8,7 @@ module Data.Memory.Types (
     Memory(..), Cell(..), CellUpdate(..), IsMemory,
     Split(..), Set(..), Sort(..), MemoryUnion, MemoryPlus, MemoryWrites,
     MemoryReads,
-    Subset(..), NoConflicts, NoConflicts_, InterCell(..), GetSymbol
+    Subset(..), NoConflicts, NoConflicts_, AutoCell(..), GetSymbol
 ) where
 
 import MonadRW (MonadRW(..))
@@ -30,15 +30,15 @@ type family MemoryReads x :: [*] where
 data Cell (v :: * -> *) (s :: Symbol) t where
     Cell :: forall s t m v c. (Monad m, MonadRW m v, Constr m v t) => v t -> Cell v s t
 
-data InterCell (s :: Symbol) t where
-    InterCell :: forall s t. IORef t -> InterCell s t
+data AutoCell (s :: Symbol) t where
+    AutoCell :: forall s t. IORef t -> AutoCell s t
 
 newtype CellUpdate = AddrUpdate String
 
 type instance Cmp (Cell v s t) (Cell v' s' t') = CmpSymbol s s'
-type instance Cmp (InterCell s t) (InterCell s' t') = CmpSymbol s s'
-type instance Cmp (Cell v s t) (InterCell s' t') = CmpSymbol s s'
-type instance Cmp (InterCell s t) (Cell v s' t') = CmpSymbol s s'
+type instance Cmp (AutoCell s t) (AutoCell s' t') = CmpSymbol s s'
+type instance Cmp (Cell v s t) (AutoCell s' t') = CmpSymbol s s'
+type instance Cmp (AutoCell s t) (Cell v s' t') = CmpSymbol s s'
 
 -- Specific definitions of Union and IsSet for lists of Cells.
 
@@ -56,9 +56,9 @@ type family IsMemory (x :: ([*], [*])) :: Constraint where
 
 type family GetSymbol (x :: *) :: Symbol where
     GetSymbol (Cell v s t) = s
-    GetSymbol (InterCell s t) = s
+    GetSymbol (AutoCell s t) = s
     GetSymbol x = TypeError (Text "Cannot get the symbol of " :<>: ShowType x
-        :$$: Text "It must be a Cell or InterCell!")
+        :$$: Text "It must be a Cell or AutoCell!")
 
 type family IfSameName (x :: Symbol) (y :: Symbol) (tru :: Constraint)
         (fals :: Constraint) :: Constraint where

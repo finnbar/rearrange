@@ -11,17 +11,17 @@ import Foreign.Ptr (Ptr)
 import Foreign.C.Types (CInt)
 
 -- This is an example built to match the hypergraph present in Figure 1.
--- It also uses the InterCell functionality mentioned at the end of Section 5,
+-- It also uses the AutoCell functionality mentioned at the end of Section 5,
 -- along with `withEnvM`.
 -- Note how every type signature is inferred.
 -- The main purpose of this example is to show type inference in different
 -- cases, and as such isn't much of a "real world" example.
 
-type Interm = InterCell "int" Int
-type Avgg = InterCell "avgg" [Int]
-type Avgj = InterCell "avgj" [Int]
-type Interm2 = InterCell "int2" Int
-type Interm3 = InterCell "int3" Int
+type Interm = AutoCell "int" Int
+type Avgg = AutoCell "avgg" [Int]
+type Avgj = AutoCell "avgj" [Int]
+type Interm2 = AutoCell "int2" Int
+type Interm3 = AutoCell "int3" Int
 
 foreign import ccall "inputCell" inputCell :: IO (Ptr CInt)
 foreign import ccall "inputCell2" inputCell2 :: IO (Ptr CInt)
@@ -44,29 +44,29 @@ f = withEnvM getEnv $ do
     memoryIO $ putStrLn $ "f " ++ show inp
     --inp <- readCell @"in" @Ptr @Int
     let normalised = fromIntegral $ inp `div` 2
-    writeInterCell @Interm normalised
+    writeAutoCell @Interm normalised
 
 -- average the last five inputs in local memory
 g = withEnvM getEnv $ do
-    inp <- readInterCell @Interm
+    inp <- readAutoCell @Interm
     memoryIO $ putStrLn $ "g " ++ show inp
-    averaging <- readInterCell @Avgg
+    averaging <- readAutoCell @Avgg
     let averaging' = take 5 (inp : averaging)
     let avg = sum averaging' `div` 5
-    writeInterCell @Avgg averaging'
-    writeInterCell @Interm2 avg
-    writeInterCell @Interm3 avg
+    writeAutoCell @Avgg averaging'
+    writeAutoCell @Interm2 avg
+    writeAutoCell @Interm3 avg
 
 -- If the value surpasses a threshold, write 100; else write 0.
 h = withEnvM getEnv $ do
-    inp <- readInterCell @Interm2
+    inp <- readAutoCell @Interm2
     memoryIO $ putStrLn $ "h " ++ show inp
     let res = if inp > 5 then 100 else 0
     writeCell @"out" res
 
 -- If the value surpasses a threshold, write 100; else write 0.
 i = withEnvM getEnv $ do
-    inp <- readInterCell @Interm2
+    inp <- readAutoCell @Interm2
     memoryIO $ putStrLn $ "i " ++ show inp
     let res = if inp > 5 then 100 else 0
     writeCell @"out2" res
@@ -75,8 +75,8 @@ i = withEnvM getEnv $ do
 j = withEnvM getEnv $ do
     inp <- readCell @"in2"
     memoryIO $ putStrLn $ "j " ++ show inp
-    averaging <- readInterCell @Avgj
+    averaging <- readAutoCell @Avgj
     let averaging' = take 5 (fromIntegral inp : averaging)
     let avg = sum averaging' `div` 5
-    writeInterCell @Avgj averaging'
+    writeAutoCell @Avgj averaging'
     writeCell @"out3" $ fromIntegral avg

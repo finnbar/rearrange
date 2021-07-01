@@ -1,10 +1,10 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.33.0.
+-- This file has been generated from package.yaml by hpack version 0.34.4.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: b6733910a9e23f3b6f62828c6a98d9c7c2c1c801a27b26ccd39131b0eeaf6e39
+-- hash: cd9b7c71883cee4d08ad5114fd79c01c6cc3896753611e2f9d0183d91260e3ec
 
 name:           rearrange
 version:        0.1.0.0
@@ -49,7 +49,15 @@ library
       Paths_rearrange
   hs-source-dirs:
       src
-  default-extensions: TypeFamilies DataKinds PolyKinds ConstraintKinds GADTs TypeApplications TypeOperators MultiParamTypeClasses
+  default-extensions:
+      TypeFamilies
+      DataKinds
+      PolyKinds
+      ConstraintKinds
+      GADTs
+      TypeApplications
+      TypeOperators
+      MultiParamTypeClasses
   c-sources:
       csrc/main.c
   build-depends:

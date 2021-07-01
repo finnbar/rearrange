@@ -6,12 +6,12 @@
 
 module Data.Memory.MemoryCell (
     readCell, writeCell,
-    readInterCell, writeInterCell,
+    readAutoCell, writeAutoCell,
     Cell(..), CellUpdate(..),
     updated, updatedInEnv
     ) where
 
-import Data.Memory.Types (Memory(..), Cell(..), CellUpdate(..), Set(..), InterCell(..))
+import Data.Memory.Types (Memory(..), Cell(..), CellUpdate(..), Set(..), AutoCell(..))
 import MonadRW
 
 import Foreign.Storable (Storable(poke, peek))
@@ -28,13 +28,13 @@ writeCell :: forall s v t m. (MonadRW m v, Constr m v t) =>
     t -> Memory m '( '[], '[Cell v s t] ) ()
 writeCell x = Mem $ \(Ext (Cell pt) Empty) -> writeVar pt x
 
-readInterCell :: forall c s t. (c ~ InterCell s t) =>
+readAutoCell :: forall c s t. (c ~ AutoCell s t) =>
     Memory IO '( '[c], '[]) t
-readInterCell = Mem $ \(Ext (InterCell pt) Empty) -> readIORef pt
+readAutoCell = Mem $ \(Ext (AutoCell pt) Empty) -> readIORef pt
 
-writeInterCell :: forall c s t. (c ~ InterCell s t) =>
+writeAutoCell :: forall c s t. (c ~ AutoCell s t) =>
     t -> Memory IO '( '[], '[c]) ()
-writeInterCell x = Mem $ \(Ext (InterCell pt) Empty) -> writeIORef pt x
+writeAutoCell x = Mem $ \(Ext (AutoCell pt) Empty) -> writeIORef pt x
 
 updated :: forall s t v. KnownSymbol s => Cell v s t -> CellUpdate
 updated _ = AddrUpdate $ symbolVal (Proxy :: Proxy s)
