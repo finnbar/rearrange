@@ -7,7 +7,7 @@
 module Data.Memory.Types (
     Memory(..), Cell(..), CellUpdate(..), IsMemory,
     Split(..), Set(..), Sort(..), MemoryUnion, MemoryPlus, MemoryWrites,
-    MemoryReads,
+    MemoryReads, MIO, IOCell,
     Subset(..), NoConflicts, NoConflicts_, AutoCell(..), GetSymbol
 ) where
 
@@ -34,6 +34,9 @@ data AutoCell (s :: Symbol) t where
     AutoCell :: forall s t. IORef t -> AutoCell s t
 
 newtype CellUpdate = AddrUpdate String
+
+type MIO s a = Memory IO s a
+type IOCell s t = Cell IORef s t
 
 type instance Cmp (Cell v s t) (Cell v' s' t') = CmpSymbol s s'
 type instance Cmp (AutoCell s t) (AutoCell s' t') = CmpSymbol s s'

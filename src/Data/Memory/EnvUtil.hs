@@ -4,16 +4,16 @@
 -- environment).
 
 {-# LANGUAGE UndecidableInstances, FlexibleInstances, AllowAmbiguousTypes,
-    ScopedTypeVariables, FunctionalDependencies #-}
+    ScopedTypeVariables, FunctionalDependencies, FlexibleContexts #-}
 
 module Data.Memory.EnvUtil (
-    withEnv, withEnvM, AddAutoCells(..), AIC, WithoutInters, GetEnvFromMems
+    withEnv, withEnvM, AddAutoCells(..), AAC, WithoutInters, GetEnvFromMems, retrieve
 ) where
 
 import Data.Memory.Types (Cell(..), Memory, Set(..), Subset, AutoCell(..))
 
 import GHC.TypeLits
-import Data.Type.Set (Union, Unionable, union)
+import Data.Type.Set (Union, Unionable, union, subset)
 import MonadVar (MonadNew(..))
 import Data.Default (Default(..))
 import Data.IORef (newIORef)
@@ -40,7 +40,7 @@ withEnvM :: (rs ~ LookupSpecific env rs, ws ~ LookupSpecific env ws) =>
 withEnvM _ = id
 {-# INLINE withEnvM #-}
 
-type AIC env env' mems = (AddAutoCells env env', env ~ WithoutInters env',
+type AAC env env' mems = (AddAutoCells env env', env ~ WithoutInters env',
     env' ~ GetEnvFromMems mems)
 
 class AddAutoCells (env :: [k]) (env' :: [k]) | env' -> env where
@@ -69,3 +69,12 @@ type family GetEnvFromMems (xs :: [*]) :: [*] where
     GetEnvFromMems '[] = '[]
     GetEnvFromMems (Memory _ '(rs, ws) _ ': xs) =
         Union rs (Union ws (GetEnvFromMems xs))
+
+type family LookupVT (xs :: [*]) (s :: Symbol) :: (* -> *, *) where
+    LookupVT (Cell v s t ': xs) s = '(v, t)
+    LookupVT (x ': xs) s = LookupVT xs s
+
+retrieve :: forall s v t xs xs'. (Subset xs' xs, xs' ~ '[Cell v s t], '(v, t) ~ LookupVT xs s) =>
+    Set xs -> Cell v s t
+retrieve set = case subset @xs' @xs set of
+    Ext x _ -> x

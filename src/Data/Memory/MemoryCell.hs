@@ -6,12 +6,13 @@
 
 module Data.Memory.MemoryCell (
     readCell, writeCell,
+    readIOCell, writeIOCell,
     readAutoCell, writeAutoCell,
     Cell(..), CellUpdate(..),
     updated, updatedInEnv
     ) where
 
-import Data.Memory.Types (Memory(..), Cell(..), CellUpdate(..), Set(..), AutoCell(..))
+import Data.Memory.Types
 import MonadRW
 
 import Foreign.Storable (Storable(poke, peek))
@@ -27,6 +28,12 @@ readCell = Mem $ \(Ext (Cell pt) Empty) -> readVar pt
 writeCell :: forall s v t m. (MonadRW m v, Constr m v t) =>
     t -> Memory m '( '[], '[Cell v s t] ) ()
 writeCell x = Mem $ \(Ext (Cell pt) Empty) -> writeVar pt x
+
+readIOCell :: forall s t. MIO '( '[IOCell s t], '[] ) t
+readIOCell = readCell
+
+writeIOCell :: forall s t. t -> MIO '( '[], '[IOCell s t]) ()
+writeIOCell = writeCell
 
 readAutoCell :: forall c s t. (c ~ AutoCell s t) =>
     Memory IO '( '[c], '[]) t

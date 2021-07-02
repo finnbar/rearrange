@@ -15,7 +15,7 @@ import Data.Memory.RunMemoryConc
 import Data.Type.TSort (ordered, OrderedConstraints)
 import Data.Type.ComponentSearch (toSortedComponents, SortedComponentsConstraints)
 import Data.Type.HList (HList(..))
-import Data.Memory.EnvUtil (AIC, AddAutoCells(addAutoCells))
+import Data.Memory.EnvUtil (AAC, AddAutoCells(addAutoCells))
 import Data.Memory.Dependencies (IsLessThan, NoOutputDep)
 
 data Prog m e = Prog {
@@ -34,7 +34,7 @@ makeProgram mems env = do
     return $ Program $ Prog {mems = mems', ..}
 
 makeProgramInters :: (OrderedConstraints IsLessThan mems mems',
-    AIC env env' mems, NoConflicts_ env', NoOutputDep mems) =>
+    AAC env env' mems, NoConflicts_ env', NoOutputDep mems) =>
     HList mems -> Set env -> IO (Program mems' env')
 makeProgramInters mems en = do
     let mems' = ordered @IsLessThan mems
@@ -42,7 +42,7 @@ makeProgramInters mems en = do
     return $ Program $ Prog {mems = mems', ..}
 
 makeParallelProgram :: (SortedComponentsConstraints IsLessThan mems mems',
-    AIC env env' mems, NoConflicts_ env', NoOutputDep mems) =>
+    AAC env env' mems, NoConflicts_ env', NoOutputDep mems) =>
     HList mems -> Set env -> IO (ParallelProgram mems' env')
 makeParallelProgram mems en = do
     let mems'' = toSortedComponents @IsLessThan mems

@@ -6,6 +6,8 @@ import Rearrange hiding ((>>=), (>>), return)
 import qualified ComplexExample as E
 import qualified Robot as R
 
+import Data.IORef
+
 foreign import ccall "cinput" cInput :: IO ()
 
 -- This just runs our two examples in order.
@@ -34,11 +36,23 @@ runRobot = do
     putStrLn "Running Robot"
     putStrLn "======"
     env <- R.getEnv
+    let (Cell in1) = retrieve @"dist" env
+    let (Cell in2) = retrieve @"sensor" env
+    let input = getInput in1 in2
     program <- makeProgram R.prog env
     printCells env
-    cInput
+    input
     runProgram program
     printCells env
-    cInput
+    input
     runProgramPartial program [updatedInEnv @"motor" env]
     printCells env
+
+getInput :: IORef Int -> IORef Int -> IO ()
+getInput in1 in2 = do
+    putStrLn "Enter first input:"
+    v1 <- readLn
+    putStrLn "Enter second input:"
+    v2 <- readLn
+    writeIORef in1 v1
+    writeIORef in2 v2
