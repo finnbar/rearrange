@@ -9,6 +9,7 @@ import Prelude hiding (Monad(..))
 import qualified Prelude as P
 import Foreign.Ptr (Ptr)
 import Foreign.C.Types (CInt)
+import Control.Concurrent
 
 -- This is an example built to match the hypergraph present in Figure 1.
 -- It also uses the AutoCell functionality mentioned at the end of Section 5,
@@ -37,13 +38,12 @@ getEnv = toEnv $ toCell @"in" inputCell :+:
     toCell @"out2" outputCell2 :+:
     toCell @"out3" outputCell3 :+: HNil
 
--- "normalise the input signal"
--- for this we just divide by 2, but any arbitrary function will do.
+-- convert the input signal
 f = withEnvM getEnv $ do
     inp <- readCell @"in"
     memoryIO $ putStrLn $ "f " ++ show inp
     --inp <- readCell @"in" @Ptr @Int
-    let normalised = fromIntegral $ inp `div` 2
+    let normalised = fromIntegral inp
     writeAutoCell @Interm normalised
 
 -- average the last five inputs in local memory
@@ -54,10 +54,11 @@ g = withEnvM getEnv $ do
     let averaging' = take 5 (inp : averaging)
     let avg = sum averaging' `div` 5
     writeAutoCell @Avgg averaging'
-    writeAutoCell @Interm2 avg
+    writeAutoCell @Interm2 inp
     writeAutoCell @Interm3 avg
 
 -- If the value surpasses a threshold, write 100; else write 0.
+-- This works with the direct (non-averaged) value.
 h = withEnvM getEnv $ do
     inp <- readAutoCell @Interm2
     memoryIO $ putStrLn $ "h " ++ show inp
@@ -65,6 +66,7 @@ h = withEnvM getEnv $ do
     writeCell @"out" res
 
 -- If the value surpasses a threshold, write 100; else write 0.
+-- This works with an averaged value.
 i = withEnvM getEnv $ do
     inp <- readAutoCell @Interm2
     memoryIO $ putStrLn $ "i " ++ show inp
@@ -73,6 +75,7 @@ i = withEnvM getEnv $ do
 
 -- average the last five inputs in local memory
 j = withEnvM getEnv $ do
+    memoryIO $ threadDelay 2
     inp <- readCell @"in2"
     memoryIO $ putStrLn $ "j " ++ show inp
     averaging <- readAutoCell @Avgj

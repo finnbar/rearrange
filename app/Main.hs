@@ -16,7 +16,7 @@ foreign import ccall "cinput" cInput :: IO ()
 
 main :: IO ()
 main = runRobot >> putStrLn "" >> runComplex
-    
+
 runComplex :: IO ()
 runComplex = do
     putStrLn "Running Complex Example"
