@@ -1,5 +1,7 @@
 # rearrange
 
+This is the code associated with Graded Monads and Type-Level Programming for Dependence Analysis, by Finnbar Keating and Michael B. Gale, to be published in Haskell '21.
+
 Haskell code for compile-time detection and resolution of data-flow dependencies.
 If you're looking for an example, look at Main.hs, Robot.hs and ComplexExample.hs.
 To run both examples, just use `stack run`.
