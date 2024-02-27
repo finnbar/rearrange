@@ -6,11 +6,13 @@
 
 module Data.Memory.Program (
     ParallelProgram, Program, makeProgram, makeParallelProgram,
-    runProgram, runProgramPartial, runParallelProgram, runParallelProgramPartial
+    runProgram, runParallelProgram, runProgram_, makeProgramInters,
+    MakeProgConstraints, RunMems_, CompileMems_, compileProgram_,
+    runParallelProgramPartial, runProgramPartial
 ) where
 
 import Data.Memory.Types (Set, Memory, CellUpdate, NoConflicts_) 
-import Data.Memory.RunMemory (RunPartialMems(..), RunMems(..))
+import Data.Memory.RunMemory (RunPartialMems(..), RunMems(..), RunMems_(..), CompileMems_(..))
 import Data.Memory.RunMemoryConc
 import Data.Type.TSort (ordered, OrderedConstraints)
 import Data.Type.ComponentSearch (toSortedComponents, SortedComponentsConstraints)
@@ -26,8 +28,10 @@ data Prog m e = Prog {
 newtype ParallelProgram m e = ParallelProgram (Prog m e)
 newtype Program m e = Program (Prog m e)
 
-makeProgram :: (Monad m, OrderedConstraints IsLessThan mems mems',
-    NoConflicts_ env, NoOutputDep mems) =>
+type MakeProgConstraints mems mems' env =
+    (OrderedConstraints IsLessThan mems mems', NoConflicts_ env, NoOutputDep mems)
+
+makeProgram :: (Monad m, MakeProgConstraints mems mems' env) =>
     HList mems -> Set env -> m (Program mems' env)
 makeProgram mems env = do
     let mems' = ordered @IsLessThan mems
@@ -52,6 +56,14 @@ makeParallelProgram mems en = do
 runProgram :: RunMems m xs env out =>
     Program xs env -> m (HList out)
 runProgram (Program Prog {..}) = runMems mems env
+
+runProgram_ :: RunMems_ m xs env =>
+    Program xs env -> m ()
+runProgram_ (Program Prog {..}) = runMems_ mems env
+
+compileProgram_ :: CompileMems_ xs env =>
+    Program xs env -> IO (IO ())
+compileProgram_ (Program Prog {..}) = compileMems_ mems env
 
 runProgramPartial :: RunPartialMems m xs env =>
     Program xs env -> [CellUpdate] -> m ()

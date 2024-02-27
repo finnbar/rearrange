@@ -5,8 +5,7 @@
     ScopedTypeVariables, FunctionalDependencies #-}
 
 module Data.Memory.RunMemory (
-    runMem, RunMems(..),
-    RunPartialMems(..)
+    runMem, RunMems(..), runMem_, RunMems_(..), CompileMems_(..), RunPartialMems(..)
 ) where
 
 import Data.Memory.Types
@@ -34,6 +33,31 @@ instance (Monad m, RunMems m xs env out, Subset (MemoryUnion s) env) =>
             r <- runMem mem env
             rs <- runMems mems env
             return $ r :+: rs
+
+runMem_ :: Subset (MemoryUnion s) env => Memory m s () -> Set env -> m ()
+runMem_ mem env = runMemory mem (subset env)
+
+class RunMems_ m xs env where
+    runMems_ :: HList xs -> Set env -> m ()
+
+instance Monad m => RunMems_ m '[] env where
+    runMems_ _ _ = return ()
+
+instance (Monad m, RunMems_ m xs env, Subset (MemoryUnion s) env) =>
+    RunMems_ m (Memory m s () ': xs) env where
+        runMems_ (mem :+: mems) env = runMem_ mem env >> runMems_ mems env
+
+class CompileMems_ xs env where
+    compileMems_ :: HList xs -> Set env -> IO (IO ())
+
+instance CompileMems_ '[] env where
+    compileMems_ _ _ = return (return ())
+
+instance (CompileMems_ xs env, Subset (MemoryUnion s) env) =>
+    CompileMems_ (Memory IO s () ': xs) env where
+        compileMems_ (mem :+: mems) env = do
+            comps <- compileMems_ mems env
+            return (runMem_ mem env >> comps)
 
 -- PARTIAL UPDATE (run memory functions only if the proxy input dictates it)
 
